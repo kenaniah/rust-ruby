@@ -29,12 +29,32 @@ LineTerminatorEscapeSequence: (&'input str, &'input str) = {
 // 8.4
 Whitespace: &'input str = {
     "\t",
-    // "\x0b" <-- Vertical tab is not supported by LALRPOP
-    // "\x0c" <-- Form feed is not supported by LALRPOP
+    r"\x0b", // vertical tab
+    r"\x0c", // form feed
     "\r",
     " "
 }
 
+// 8.5
+Comment: &'input str = {
+    SingleLineComment,
+    MultiLineComment
+}
+
+// 8.5
+SingleLineComment: &'input str = {
+    r"#.*"
+}
+
+// 8.5
+MultiLineComment: &'input str = {
+    r"(?m)\n=begin.*\n=end"
+}
+
+// 8.5
+EndOfProgram: &'input str = {
+    r"(?m)\n__END__.*"
+}
 
 // single-variable-assignment-expression
 // variable
