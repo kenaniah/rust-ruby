@@ -1,13 +1,14 @@
 #[macro_use] extern crate lalrpop_util;
 
 lalrpop_mod!(pub ruby26);
+pub mod tokens;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        assert!(ruby26::TermParser::new().parse("22").is_ok());
+        assert!("\n" == "\x0a");
         assert!(ruby26::TermParser::new().parse("foo").is_err());
     }
     #[test]

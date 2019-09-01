@@ -8,3 +8,34 @@ pub Term: i32 = {
 }
 
 Num: i32 = r"[0-9]+" => i32::from_str(<>).unwrap();
+
+// 8.3
+LineTerminator: &'input str = {
+    "\n",
+    "\r\n"
+}
+
+// 8.3
+Separator: &'input str = {
+    ";",
+    LineTerminator
+}
+
+// 8.4
+LineTerminatorEscapeSequence: (&'input str, &'input str) = {
+    "\\" LineTerminator
+}
+
+// 8.4
+Whitespace: &'input str = {
+    "\t",
+    // "\x0b" <-- Vertical tab is not supported by LALRPOP
+    // "\x0c" <-- Form feed is not supported by LALRPOP
+    "\r",
+    " "
+}
+
+
+// single-variable-assignment-expression
+// variable
+// operator-expression
