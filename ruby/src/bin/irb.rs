@@ -6,7 +6,7 @@ use rustyline::error::ReadlineError;
 fn main() {}
 
 #[cfg(not(target_arch = "wasm32"))]
-/// Run a REPL interpreter
+/// Runs a REPL interpreter
 fn main() -> Result<(), Error> {
 
     let mut output = io::stdout();
@@ -48,6 +48,6 @@ fn main() -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ///IO error when writing to output or error streams
+    /// IO error when writing to output or error streams
     Io(io::Error)
 }
