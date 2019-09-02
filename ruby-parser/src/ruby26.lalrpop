@@ -1,60 +1,353 @@
-use std::str::FromStr;
+// use std::str::FromStr;
 
 grammar;
 
-pub Term: i32 = {
-    <n:Num> => n,
-    "(" <t:Term> ")" => t
+// pub Term: i32 = {
+//     <n:Num> => n,
+//     "(" <t:Term> ")" => t
+// }
+//
+// Num: i32 = r"[0-9]+" => i32::from_str(<>).unwrap();
+
+// 8.1
+pub InputElement: String = {
+    LineTerminator => <>.to_string(),
+    Whitespace => <>.to_string(),
+    Comment => <>.to_string(),
+    EndOfProgramMarker => <>.to_string(),
+    Token => <>.to_string()
 }
 
-Num: i32 = r"[0-9]+" => i32::from_str(<>).unwrap();
+// 8.2
+// SourceCharacter: String = {
+//     r"."
+// }
 
 // 8.3
-LineTerminator: &'input str = {
-    "\n",
-    "\r\n"
+LineTerminator: String = {
+    "\n" => <>.to_string(), // 0x0a
+    "\r\n" => <>.to_string() // 0x0d 0x0a
 }
 
 // 8.3
-Separator: &'input str = {
-    ";",
-    LineTerminator
+Separator: String = {
+    ";" => <>.to_string(),
+    LineTerminator => <>.to_string()
 }
 
 // 8.4
-LineTerminatorEscapeSequence: (&'input str, &'input str) = {
-    "\\" LineTerminator
+Whitespace: String = {
+    "\t" => <>.to_string(),
+    r"\x0b" => <>.to_string(), // vertical tab
+    r"\x0c" => <>.to_string(), // form feed
+    "\r" => <>.to_string(),
+    " " => <>.to_string()
 }
 
 // 8.4
-Whitespace: &'input str = {
-    "\t",
-    r"\x0b", // vertical tab
-    r"\x0c", // form feed
-    "\r",
-    " "
+LineTerminatorEscapeSequence: String = {
+    <a:"\\"> <b:LineTerminator> => [a.to_string(), b].concat()
+}
+
+// The comment implementation may be buggy -- it's not a literal reflection of the spec
+
+// 8.5
+Comment: String = {
+    SingleLineComment => <>.to_string(),
+    MultiLineComment => <>.to_string()
 }
 
 // 8.5
-Comment: &'input str = {
-    SingleLineComment,
-    MultiLineComment
+SingleLineComment: String = {
+    r"#.*" => <>.to_string()
 }
 
 // 8.5
-SingleLineComment: &'input str = {
-    r"#.*"
+MultiLineComment: String = {
+    r"(?m)\n=begin.*\n=end" => <>.to_string()
 }
 
-// 8.5
-MultiLineComment: &'input str = {
-    r"(?m)\n=begin.*\n=end"
+// The end of program implementation may be buggy -- it's not a literal reflection of the spec
+
+// 8.6
+EndOfProgramMarker: String = {
+    r"(?m)\n__END__.*" => <>.to_string()
 }
 
-// 8.5
-EndOfProgram: &'input str = {
-    r"(?m)\n__END__.*"
+// 8.7.1
+Token: String = {
+    Keyword => <>.to_string(),
+    Identifier => <>.to_string(),
+    Punctuator => <>.to_string(),
+    Operator => <>.to_string(),
+    Literal => <>.to_string()
 }
+
+// 8.7.2
+Keyword: String = {
+    "__LINE__" => <>.to_string(),
+    "__ENCODING__" => <>.to_string(),
+    "__FILE__" => <>.to_string(),
+    "BEGIN" => <>.to_string(),
+    "END" => <>.to_string(),
+    "alias" => <>.to_string(),
+    "and" => <>.to_string(),
+    "begin" => <>.to_string(),
+    "break" => <>.to_string(),
+    "case" => <>.to_string(),
+    "class" => <>.to_string(),
+    "def" => <>.to_string(),
+    "defined?" => <>.to_string(),
+    "do" => <>.to_string(),
+    "else" => <>.to_string(),
+    "elsif" => <>.to_string(),
+    "end" => <>.to_string(),
+    "ensure" => <>.to_string(),
+    "for" => <>.to_string(),
+    "false" => <>.to_string(),
+    "if" => <>.to_string(),
+    "in" => <>.to_string(),
+    "module" => <>.to_string(),
+    "next" => <>.to_string(),
+    "nil" => <>.to_string(),
+    "not" => <>.to_string(),
+    "or" => <>.to_string(),
+    "redo" => <>.to_string(),
+    "rescue" => <>.to_string(),
+    "retry" => <>.to_string(),
+    "return" => <>.to_string(),
+    "self" => <>.to_string(),
+    "super" => <>.to_string(),
+    "then" => <>.to_string(),
+    "true" => <>.to_string(),
+    "undef" => <>.to_string(),
+    "unless" => <>.to_string(),
+    "until" => <>.to_string(),
+    "when" => <>.to_string(),
+    "while" => <>.to_string(),
+    "yield" => <>.to_string()
+}
+
+// 8.7.3
+Identifier: String = {
+    LocalVariableIdentifier => <>.to_string(),
+    GlobalVariableIdentifier => <>.to_string(),
+    ClassVariableIdentifier => <>.to_string(),
+    InstanceVariableIdentifier => <>.to_string(),
+    ConstantIdentifier => <>.to_string(),
+    MethodOnlyIdentifier => <>.to_string(),
+    AssignmentLikeMethodIdentifier => <>.to_string()
+}
+
+// 8.7.3
+LocalVariableIdentifier: String = {
+    r"[a-z_][a-zA-Z0-9_]*" => <>.to_string()
+}
+
+// 8.7.3
+GlobalVariableIdentifier: String = {
+    r"\$[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string()
+}
+
+// 8.7.3
+ClassVariableIdentifier: String = {
+    r"@@[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string()
+}
+
+// 8.7.3
+InstanceVariableIdentifier: String = {
+    r"@[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string()
+}
+
+// 8.7.3
+ConstantIdentifier: String = {
+    r"[A-Z][a-zA-Z0-9_]*" => <>.to_string()
+}
+
+// 8.7.3
+MethodOnlyIdentifier: String = {
+    r"[a-zA-Z_][a-zA-Z0-9_]*[!?]" => <>.to_string()
+}
+
+// 8.7.3
+AssignmentLikeMethodIdentifier: String = {
+    r"[a-zA-Z_][a-zA-Z0-9_]*=" => <>.to_string()
+}
+
+// 8.7.4
+Punctuator: String = {
+    "[" => <>.to_string(),
+    "]" => <>.to_string(),
+    "(" => <>.to_string(),
+    ")" => <>.to_string(),
+    "{" => <>.to_string(),
+    "}" => <>.to_string(),
+    "::" => <>.to_string(),
+    "," => <>.to_string(),
+    ";" => <>.to_string(),
+    ".." => <>.to_string(),
+    "..." => <>.to_string(),
+    "?" => <>.to_string(),
+    ":" => <>.to_string(),
+    "=>" => <>.to_string()
+}
+
+// 8.7.5
+Operator: String = {
+    "!" => <>.to_string(),
+    r"!=" => <>.to_string(),
+    "!~" => <>.to_string(),
+    "&&" => <>.to_string(),
+    "||" => <>.to_string(),
+    OperatorMethodName => <>.to_string(),
+    "=" => <>.to_string(),
+    AssignmentOperator => <>.to_string()
+}
+
+// 8.7.5
+OperatorMethodName: String = {
+    "^" => <>.to_string(),
+    r"&" => <>.to_string(),
+    "|" => <>.to_string(),
+    "<=>" => <>.to_string(),
+    "==" => <>.to_string(),
+    "===" => <>.to_string(),
+    "=~" => <>.to_string(),
+    ">" => <>.to_string(),
+    ">=" => <>.to_string(),
+    "<" => <>.to_string(),
+    "<=" => <>.to_string(),
+    "<<" => <>.to_string(),
+    ">>" => <>.to_string(),
+    "+" => <>.to_string(),
+    "-" => <>.to_string(),
+    "*" => <>.to_string(),
+    "/" => <>.to_string(),
+    "%" => <>.to_string(),
+    "**" => <>.to_string(),
+    "~" => <>.to_string(),
+    "+@" => <>.to_string(),
+    "-@" => <>.to_string(),
+    "[]" => <>.to_string(),
+    "[]=" => <>.to_string()
+    //"‘" <-- Ommitted
+}
+
+// 8.7.5
+AssignmentOperator: String = {
+    <a:AssignmentOperatorName> <b:r"="> => [a, b.to_string()].concat()
+}
+
+// 8.7.5
+AssignmentOperatorName: String = {
+    "&&" => <>.to_string(),
+    r"\|\|" => <>.to_string(),
+    "^" => <>.to_string(),
+    "&" => <>.to_string(),
+    "|" => <>.to_string(),
+    "<<" => <>.to_string(),
+    ">>" => <>.to_string(),
+    "+" => <>.to_string(),
+    "-" => <>.to_string(),
+    "*" => <>.to_string(),
+    "/" => <>.to_string(),
+    "%" => <>.to_string(),
+    "**" => <>.to_string()
+}
+
+// 8.7.6
+Literal: String = {
+    NumericLiteral,
+    //StringLiteral,
+    //ArrayLiteral,
+    //RegularExpressionLiteral,
+    //Symbol
+}
+
+// 8.7.6
+NumericLiteral: String = {
+    SignedNumber => <>.to_string(),
+    UnsignedNumber => <>.to_string()
+}
+
+// 8.7.6
+SignedNumber: String = {
+    <a:r"[+-]"> <b:UnsignedNumber> => [a.to_string(), b].concat()
+}
+
+// 8.7.6
+UnsignedNumber: String = {
+    IntegerLiteral => <>.to_string(),
+    FloatLiteral => <>.to_string()
+}
+
+// 8.7.6
+IntegerLiteral: String = {
+    DecimalIntegerLiteral => <>.to_string(),
+    BinaryIntegerLiteral => <>.to_string(),
+    OctalIntegerLiteral => <>.to_string(),
+    HexadecimalIntegerLiteral => <>.to_string()
+}
+
+// 8.7.6
+DecimalIntegerLiteral: String = {
+    UnprefixedDecimalIntegerLiteral => <>.to_string(),
+    PrefixedDecimalIntegerLiteral => <>.to_string()
+}
+
+// 8.7.6
+UnprefixedDecimalIntegerLiteral: String = {
+    "0" => <>.to_string(),
+    r"[1-9](_?[0-9])*" => <>.to_string()
+}
+
+// 8.7.6
+PrefixedDecimalIntegerLiteral: String = {
+    r"0[dD][0-9](_?[0-9])*" => <>.to_string()
+}
+
+// 8.7.6
+BinaryIntegerLiteral: String = {
+    r"0[bB][01](_?[01])*" => <>.to_string()
+}
+
+// 8.7.6
+OctalIntegerLiteral: String = {
+    r"0[_oO]?[0-7](_?[0-7])*" => <>.to_string()
+}
+
+// 8.7.6
+HexadecimalIntegerLiteral: String = {
+    r"0[xX][0-9a-fA-F](_?[0-9a-fA-F])*" => <>.to_string()
+}
+
+// 8.7.6
+FloatLiteral: String = {
+    FloatLiteralWithoutExponent => <>.to_string(),
+    FloatLiteralWithExponent => <>.to_string()
+}
+
+// 8.7.6
+FloatLiteralWithoutExponent: String = {
+    <a:UnprefixedDecimalIntegerLiteral> <b:r"\.[0-9](_?[0-9])*"> => [a, b.to_string()].concat()
+}
+
+// 8.7.6
+FloatLiteralWithExponent: String = {
+    SignificandPart ExponentPart => [<>].concat()
+}
+
+// 8.7.6
+SignificandPart: String = {
+    FloatLiteralWithoutExponent => <>.to_string(),
+    UnprefixedDecimalIntegerLiteral => <>.to_string()
+}
+
+// 8.7.6
+ExponentPart: String = {
+    r"!!!BROKEN[eE][+-]?[0-9](_?[0-9])*" => <>.to_string()
+}
+
 
 // single-variable-assignment-expression
 // variable

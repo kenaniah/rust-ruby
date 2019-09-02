@@ -8,12 +8,11 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        assert!("\n" == "\x0a");
-        assert!(ruby26::TermParser::new().parse("foo").is_err());
+        assert!(ruby26::InputElementParser::new().parse("foo").is_err());
     }
     #[test]
     fn second() {
-        assert!(ruby26::TermParser::new().parse("(44)").is_ok());
-        assert!(ruby26::TermParser::new().parse("foo").is_err());
+        assert!(ruby26::InputElementParser::new().parse("\n").is_ok());
+        assert!(ruby26::InputElementParser::new().parse("\r\n__END__asldfjdsalfk").is_ok());
     }
 }
