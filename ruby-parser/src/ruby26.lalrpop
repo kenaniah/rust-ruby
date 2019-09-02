@@ -11,11 +11,11 @@ grammar;
 
 // 8.1
 pub InputElement: String = {
-    LineTerminator => <>.to_string(),
-    Whitespace => <>.to_string(),
-    Comment => <>.to_string(),
-    EndOfProgramMarker => <>.to_string(),
-    Token => <>.to_string()
+    LineTerminator,
+    Whitespace,
+    Comment,
+    EndOfProgramMarker,
+    Token
 }
 
 // 8.2
@@ -32,7 +32,7 @@ LineTerminator: String = {
 // 8.3
 Separator: String = {
     ";" => <>.to_string(),
-    LineTerminator => <>.to_string()
+    LineTerminator
 }
 
 // 8.4
@@ -53,8 +53,8 @@ LineTerminatorEscapeSequence: String = {
 
 // 8.5
 Comment: String = {
-    SingleLineComment => <>.to_string(),
-    MultiLineComment => <>.to_string()
+    SingleLineComment,
+    MultiLineComment
 }
 
 // 8.5
@@ -76,11 +76,11 @@ EndOfProgramMarker: String = {
 
 // 8.7.1
 Token: String = {
-    Keyword => <>.to_string(),
-    Identifier => <>.to_string(),
-    Punctuator => <>.to_string(),
-    Operator => <>.to_string(),
-    Literal => <>.to_string()
+    Keyword,
+    Identifier,
+    Punctuator,
+    Operator,
+    Literal
 }
 
 // 8.7.2
@@ -130,13 +130,13 @@ Keyword: String = {
 
 // 8.7.3
 Identifier: String = {
-    LocalVariableIdentifier => <>.to_string(),
-    GlobalVariableIdentifier => <>.to_string(),
-    ClassVariableIdentifier => <>.to_string(),
-    InstanceVariableIdentifier => <>.to_string(),
-    ConstantIdentifier => <>.to_string(),
-    MethodOnlyIdentifier => <>.to_string(),
-    AssignmentLikeMethodIdentifier => <>.to_string()
+    LocalVariableIdentifier,
+    GlobalVariableIdentifier,
+    ClassVariableIdentifier,
+    InstanceVariableIdentifier,
+    ConstantIdentifier,
+    MethodOnlyIdentifier,
+    AssignmentLikeMethodIdentifier
 }
 
 // 8.7.3
@@ -199,9 +199,9 @@ Operator: String = {
     "!~" => <>.to_string(),
     "&&" => <>.to_string(),
     "||" => <>.to_string(),
-    OperatorMethodName => <>.to_string(),
+    OperatorMethodName,
     "=" => <>.to_string(),
-    AssignmentOperator => <>.to_string()
+    AssignmentOperator
 }
 
 // 8.7.5
@@ -266,8 +266,8 @@ Literal: String = {
 
 // 8.7.6
 NumericLiteral: String = {
-    SignedNumber => <>.to_string(),
-    UnsignedNumber => <>.to_string()
+    SignedNumber,
+    UnsignedNumber
 }
 
 // 8.7.6
@@ -283,16 +283,16 @@ UnsignedNumber: String = {
 
 // 8.7.6
 IntegerLiteral: String = {
-    DecimalIntegerLiteral => <>.to_string(),
-    BinaryIntegerLiteral => <>.to_string(),
-    OctalIntegerLiteral => <>.to_string(),
-    HexadecimalIntegerLiteral => <>.to_string()
+    DecimalIntegerLiteral,
+    BinaryIntegerLiteral,
+    OctalIntegerLiteral,
+    HexadecimalIntegerLiteral
 }
 
 // 8.7.6
 DecimalIntegerLiteral: String = {
-    UnprefixedDecimalIntegerLiteral => <>.to_string(),
-    PrefixedDecimalIntegerLiteral => <>.to_string()
+    UnprefixedDecimalIntegerLiteral,
+    PrefixedDecimalIntegerLiteral
 }
 
 // 8.7.6
@@ -323,8 +323,8 @@ HexadecimalIntegerLiteral: String = {
 
 // 8.7.6
 FloatLiteral: String = {
-    FloatLiteralWithoutExponent => <>.to_string(),
-    FloatLiteralWithExponent => <>.to_string()
+    FloatLiteralWithoutExponent,
+    FloatLiteralWithExponent
 }
 
 // 8.7.6
@@ -339,8 +339,8 @@ FloatLiteralWithExponent: String = {
 
 // 8.7.6
 SignificandPart: String = {
-    FloatLiteralWithoutExponent => <>.to_string(),
-    UnprefixedDecimalIntegerLiteral => <>.to_string()
+    FloatLiteralWithoutExponent,
+    UnprefixedDecimalIntegerLiteral
 }
 
 // 8.7.6
