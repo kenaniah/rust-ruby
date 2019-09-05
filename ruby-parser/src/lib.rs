@@ -2,6 +2,8 @@
 
 lalrpop_mod!(pub ruby26);
 pub mod tokens;
+pub mod lexer;
+pub mod location;
 
 #[cfg(test)]
 mod tests {

@@ -3,6 +3,7 @@
 pub enum Token {
 
     LineTerminator, // 8.3 - \n or \r\n
+    Whitespace,
 
     // 8.7.2 - Keywords (alphanumerically)
     LINE, // __LINE__

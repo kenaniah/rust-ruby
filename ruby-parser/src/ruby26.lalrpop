@@ -277,8 +277,8 @@ SignedNumber: String = {
 
 // 8.7.6
 UnsignedNumber: String = {
-    IntegerLiteral => <>.to_string(),
-    FloatLiteral => <>.to_string()
+    IntegerLiteral,
+    FloatLiteral
 }
 
 // 8.7.6
@@ -344,6 +344,7 @@ SignificandPart: String = {
 }
 
 // 8.7.6
+// FIXME: This is currently broken due to grammar ambiguities
 ExponentPart: String = {
     r"!!!BROKEN[eE][+-]?[0-9](_?[0-9])*" => <>.to_string()
 }
