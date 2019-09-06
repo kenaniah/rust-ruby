@@ -1,12 +1,10 @@
 //! This module handles the lexing of Ruby source code. The input will be translated into a
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
 
-// stdlib
-use core::fmt::Error;
-use std::collections::HashMap; // temporary
-
 use super::location::Location;
 pub use super::tokens::Token;
+use core::fmt::Error;
+use std::collections::HashMap;
 
 /// Composite type that tracks a token and its starting and ending location
 pub type Spanned = (Location, Token, Location);
@@ -90,6 +88,11 @@ where
             location: Location::new(0, 0),
             keywords: get_keywords(),
         };
+        // Preload the first 3 characters into the lexer
+        lxr.next_char();
+        lxr.next_char();
+        lxr.next_char();
+        lxr.location.reset(); // Moves back to line 1, col 1
         lxr
     }
 
