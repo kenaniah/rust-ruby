@@ -2,11 +2,11 @@
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
 
 // stdlib
-use std::collections::HashMap;
-use core::fmt::Error; // temporary
+use core::fmt::Error;
+use std::collections::HashMap; // temporary
 
-pub use super::tokens::Token;
 use super::location::Location;
+pub use super::tokens::Token;
 
 /// Composite type that tracks a token and its starting and ending location
 pub type Spanned = (Location, Token, Location);
@@ -20,11 +20,11 @@ pub struct Lexer<T: Iterator<Item = char>> {
     at_line_start: bool,
     nesting_level: usize,
     pending_tokens: Vec<Spanned>,
-    char0: Option<char>,
-    char1: Option<char>,
-    char2: Option<char>,
+    chr0: Option<char>,
+    chr1: Option<char>,
+    chr2: Option<char>,
     location: Location,
-    keywords: HashMap<String, Token>
+    keywords: HashMap<String, Token>,
 }
 
 // 8.7.2 - Keywords (alphanumerically)
@@ -72,4 +72,42 @@ pub fn get_keywords() -> HashMap<String, Token> {
     keywords.insert(String::from("while"), Token::While);
     keywords.insert(String::from("yield"), Token::Yield);
     keywords
+}
+
+impl<T> Lexer<T>
+where
+    T: Iterator<Item = char>,
+{
+    pub fn new(input: T) -> Self {
+        let mut lxr = Lexer {
+            chars: input,
+            at_line_start: true,
+            nesting_level: 0,
+            pending_tokens: Vec::new(),
+            chr0: None,
+            chr1: None,
+            chr2: None,
+            location: Location::new(0, 0),
+            keywords: get_keywords(),
+        };
+        lxr
+    }
+
+    /// Helper function that consumes the next upcoming character
+    /// This method will also adjust the lexer's current location accordingly
+    fn next_char(&mut self) -> Option<char> {
+        // Shift the stack of upcoming characters
+        let c = self.chr0;
+        self.chr0 = self.chr1;
+        self.chr1 = self.chr2;
+        self.chr2 = self.chars.next();
+
+        // Update the lexer's source location
+        if c == Some('\n') {
+            self.location.newline();
+        } else {
+            self.location.move_right();
+        }
+        c
+    }
 }
