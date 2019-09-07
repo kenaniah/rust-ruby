@@ -63,24 +63,50 @@ pub enum Token {
     MethodOnlyIdentifier,
     AssignmentLikeMethodIdentifier,
     // 8.7.4 - Punctuators
-    LeftBracket,  // [
-    RightBracket, // ]
-    LeftParen,    // (
-    RightParen,   // )
-    LeftBrace,    // {
-    RightBrace,   // }
-    DblColon,     // ::
-    Comma,        // ,
-    Semicolon,    // ;
-    TwoDot,       // ..
-    ThreeDot,     // ...
-    QuestionMark, // ?
-    Colon,        // :
-    Arrow,        // =>
+    LeftBracket,   // [
+    RightBracket,  // ]
+    LeftParen,     // (
+    RightParen,    // )
+    LeftBrace,     // {
+    RightBrace,    // }
+    DoubleColon,   // ::
+    Comma,         // ,
+    Semicolon,     // ;
+    TwoDot,        // ..
+    ThreeDot,      // ...
+    OpTernaryIf,   // ?
+    OpTernaryElse, // :
+    Arrow,         // =>
     // 8.7.5 - Operators
     OpNot,      // !
     OpNotEqual, // !=
     OpNotMatch, // !~
     OpAnd,      // &&
     OpOr,       // ||
+    OpAssign,   // =
+    // Operator methods
+    OpBinXor,        // ^
+    OpBinAnd,        // &
+    OpBinOr,         // |
+    OpCompare,       // <=>
+    OpDoubleEqual,   // ==
+    OpTripleEqual,   // ===
+    OpMatch,         // =~
+    OpGt,            // >
+    OpGtEqual,       // >=
+    OpLt,            // <
+    OpLtEqual,       // <=
+    OpLeftShift,     // <<
+    OpRightShift,    // >>
+    OpPlus,          // +
+    OpMinus,         // -
+    OpMultiply,      // *
+    OpDivide,        // /
+    OpModulus,       // %
+    OpExponent,      // **
+    OpBinComplement, // ~
+    OpUnaryPlus,     // +@
+    OpUnaryMinus,    // -@
+    OpElementGet,    // []
+    OpElementSet,    // []=
 }
