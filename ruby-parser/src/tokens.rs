@@ -85,30 +85,31 @@ pub enum Token {
     OpOr,       // ||
     OpAssign,   // =
     // Operator methods
-    OpBinXor,           // ^
-    OpBinAnd,           // &
-    OpBinOr,            // |
-    OpCompare,          // <=>
-    OpDoubleEqual,      // ==
-    OpTripleEqual,      // ===
-    OpMatch,            // =~
-    OpGt,               // >
-    OpGtEqual,          // >=
-    OpLt,               // <
-    OpLtEqual,          // <=
-    OpLeftShift,        // <<
-    OpRightShift,       // >>
-    OpPlus,             // +
-    OpMinus,            // -
-    OpMultiply,         // *
-    OpDivide,           // /
-    OpModulus,          // %
-    OpExponent,         // **
-    OpBinComplement,    // ~
-    OpUnaryPlus,        // +@
-    OpUnaryMinus,       // -@
-    OpElementGet,       // []
-    OpElementSet,       // []=
+    OpBinXor,        // ^
+    OpBinAnd,        // &
+    OpBinOr,         // |
+    OpCompare,       // <=>
+    OpDoubleEqual,   // ==
+    OpTripleEqual,   // ===
+    OpMatch,         // =~
+    OpGt,            // >
+    OpGtEqual,       // >=
+    OpLt,            // <
+    OpLtEqual,       // <=
+    OpLeftShift,     // <<
+    OpRightShift,    // >>
+    OpPlus,          // +
+    OpMinus,         // -
+    OpMultiply,      // *
+    OpDivide,        // /
+    OpModulus,       // %
+    OpExponent,      // **
+    OpBinComplement, // ~
+    OpUnaryPlus,     // +@
+    OpUnaryMinus,    // -@
+    OpElementGet,    // []
+    OpElementSet,    // []=
+    // Operator assignment methods
     OpAndAssign,        // &&=
     OpOrAssign,         // ||=
     OpXorAssign,        // ^=
