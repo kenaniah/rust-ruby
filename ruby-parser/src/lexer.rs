@@ -5,6 +5,7 @@ use super::location::Location;
 pub use super::tokens::Token;
 use core::fmt::Error;
 use std::collections::HashMap;
+use log::trace;
 
 /// Composite type that tracks a token and its starting and ending location
 pub type Spanned = (Location, Token, Location);
@@ -23,6 +24,10 @@ pub struct Lexer<T: Iterator<Item = char>> {
     chr2: Option<char>,
     location: Location,
     keywords: HashMap<String, Token>,
+}
+
+pub fn make_tokenizer<'a>(source: &'a str) -> impl Iterator<Item = LexResult> + 'a {
+    Lexer::new(source.chars())
 }
 
 // 8.7.2 - Keywords (alphanumerically)
@@ -76,6 +81,7 @@ impl<T> Lexer<T>
 where
     T: Iterator<Item = char>,
 {
+    /// Initializes a lexer and pre-reads the first 3 characters
     pub fn new(input: T) -> Self {
         let mut lxr = Lexer {
             chars: input,
@@ -96,6 +102,20 @@ where
         lxr
     }
 
+    /// This function is used by the iterator implementatin to retrieve the next token
+    fn inner_next(&mut self) -> LexResult {
+        while self.pending_tokens.is_empty() {
+            self.consume_normal()?;
+        }
+        Ok(self.pending_tokens.remove(0))
+    }
+
+    fn consume_normal(&mut self) -> Result<(), Error> {
+        self.emit((self.get_pos(), Token::Def, self.get_pos()));
+        self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
+        Ok(())
+    }
+
     /// Helper function that consumes the next upcoming character
     /// This method will also adjust the lexer's current location accordingly
     fn next_char(&mut self) -> Option<char> {
@@ -113,4 +133,55 @@ where
         }
         c
     }
+
+    /// Helper function to retrieve the lexer's current location
+    fn get_pos(&self) -> Location {
+        self.location.clone()
+    }
+
+    /// Helper function to emit a lexed token to the queue of tokens
+    fn emit(&mut self, spanned: Spanned) {
+        self.pending_tokens.push(spanned);
+    }
+}
+
+impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
+    type Item = LexResult;
+    fn next(&mut self) -> Option<Self::Item> {
+        let token = self.inner_next();
+        trace!(
+            "Lex token {:?}, nesting={:?}",
+            token,
+            self.nesting_level
+        );
+        match token {
+            Ok((_, Token::EndOfFile, _)) => None,
+            r => Some(r)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{make_tokenizer, Token};
+    use std::iter::FromIterator;
+    use std::iter::Iterator;
+
+    pub fn lex_source(source: &String) -> Vec<Token> {
+        let lexer = make_tokenizer(source);
+        Vec::from_iter(lexer.map(|x| x.unwrap().1))
+    }
+
+    #[test]
+    fn test_basics() {
+        let source = String::from("foo bar");
+        let tokens = lex_source(&source);
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Def
+            ]
+        )
+    }
+
 }
