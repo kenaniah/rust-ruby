@@ -122,10 +122,10 @@ where
             } else {
                 self.consume_character(c)?;
             }
+        } else {
+            // We're at the end of the file
+            self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
         }
-
-        // self.emit((self.get_pos(), Token::KwDef, self.get_pos()));
-        // self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
         Ok(())
     }
 
@@ -257,7 +257,11 @@ mod tests {
     fn test_basics() {
         let source = String::from("foo bar");
         let tokens = lex_source(&source);
-        assert_eq!(tokens, vec![Token::KwDef])
+        assert_eq!(tokens, vec![
+            Token::RefactorIdentifier { value: String::from("foo") },
+            Token::Whitespace,
+            Token::RefactorIdentifier { value: String::from("bar") }
+        ])
     }
 
 }
