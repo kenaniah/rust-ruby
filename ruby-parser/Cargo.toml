@@ -8,6 +8,8 @@ edition = "2018"
 lalrpop = "0.17.2"
 
 [dependencies]
+num-bigint = "0.2.3"
 lalrpop-util = "0.17.2"
 log = "0.4"
 regex = "0.2.1"
+unicode-xid = "0.2.0"

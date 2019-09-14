@@ -1,9 +1,10 @@
 #[macro_use] extern crate lalrpop_util;
 
 lalrpop_mod!(pub ruby26);
-pub mod tokens;
+pub mod error;
 pub mod lexer;
 pub mod location;
+pub mod tokens;
 
 #[cfg(test)]
 mod tests {

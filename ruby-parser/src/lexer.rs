@@ -1,17 +1,18 @@
 //! This module handles the lexing of Ruby source code. The input will be translated into a
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
 
+use super::error::{LexicalError, LexicalErrorType};
 use super::location::Location;
 pub use super::tokens::Token;
-use core::fmt::Error;
-use std::collections::HashMap;
 use log::trace;
+use std::collections::HashMap;
+use unicode_xid::UnicodeXID;
 
 /// Composite type that tracks a token and its starting and ending location
 pub type Spanned = (Location, Token, Location);
 
 /// Type used to track the success of a lexing operation
-pub type LexResult = Result<Spanned, Error>;
+pub type LexResult = Result<Spanned, LexicalError>;
 
 /// Holds the lexer's current state
 pub struct Lexer<T: Iterator<Item = char>> {
@@ -102,7 +103,7 @@ where
         lxr
     }
 
-    /// This function is used by the iterator implementatin to retrieve the next token
+    /// This function is used by the iterator implementation to retrieve the next token
     fn inner_next(&mut self) -> LexResult {
         while self.pending_tokens.is_empty() {
             self.consume_normal()?;
@@ -111,9 +112,44 @@ where
     }
 
     /// This function takes a look at the next character, if any, and decides on the next steps
-    fn consume_normal(&mut self) -> Result<(), Error> {
-        self.emit((self.get_pos(), Token::KwDef, self.get_pos()));
-        self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
+    fn consume_normal(&mut self) -> Result<(), LexicalError> {
+        // Check if we have some character
+        if let Some(c) = self.chr0 {
+            // First check for an identifier
+            if self.is_identifier_start(c) {
+                let identifier = self.lex_identifier()?;
+                self.emit(identifier);
+            } else {
+                self.consume_character(c)?;
+            }
+        }
+
+        // self.emit((self.get_pos(), Token::KwDef, self.get_pos()));
+        // self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
+        Ok(())
+    }
+
+    /// Consumes non-identifying characters
+    fn consume_character(&mut self, c: char) -> Result<(), LexicalError> {
+        let tok_start = self.get_pos();
+        match c {
+            '\x09' | '\x0b' | '\x0c' | '\x0d' | '\x20' => {
+                // Consume whitespaces
+                self.next_char();
+                while self.chr0 == Some('\x09') || self.chr0 == Some('\x0b') || self.chr0 == Some('\x0c') || self.chr0 == Some('\x0d') || self.chr0 == Some('\x20') {
+                    self.next_char();
+                }
+                let tok_end = self.get_pos();
+                self.emit((tok_start, Token::Whitespace, tok_end))
+            }
+            _ => {
+                let c = self.next_char();
+                return Err(LexicalError {
+                    location: tok_start,
+                    error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() }
+                })
+            }
+        }
         Ok(())
     }
 
@@ -144,20 +180,64 @@ where
     fn emit(&mut self, spanned: Spanned) {
         self.pending_tokens.push(spanned);
     }
+
+    /// Determines whether this character is a valid starting unicode identifier
+    fn is_identifier_start(&self, c: char) -> bool {
+        match c {
+            '_' => true,
+            c => UnicodeXID::is_xid_start(c),
+        }
+    }
+
+    /// Determines whether the character is the continuation of a valid unicode identifier
+    fn is_identifier_continuation(&self) -> bool {
+        if let Some(c) = self.chr0 {
+            match c {
+                '_' | '0'..='9' => true,
+                c => UnicodeXID::is_xid_continue(c),
+            }
+        } else {
+            false
+        }
+    }
+
+    fn lex_identifier(&mut self) -> LexResult {
+        let mut name = String::new();
+        let start_pos = self.get_pos();
+
+        // Take the first character
+        name.push(self.next_char().unwrap());
+
+        // Check for more identifier characters
+        while self.is_identifier_continuation() {
+            name.push(self.next_char().unwrap());
+        }
+        let end_pos = self.get_pos();
+
+        // Emit the token
+        if self.keywords.contains_key(&name) {
+            Ok((start_pos, self.keywords[&name].clone(), end_pos))
+        } else {
+            Ok((
+                start_pos,
+                Token::RefactorIdentifier { value: name },
+                end_pos,
+            ))
+        }
+    }
 }
 
-impl<T> Iterator for Lexer<T> where T: Iterator<Item = char> {
+impl<T> Iterator for Lexer<T>
+where
+    T: Iterator<Item = char>,
+{
     type Item = LexResult;
     fn next(&mut self) -> Option<Self::Item> {
         let token = self.inner_next();
-        trace!(
-            "Lex token {:?}, nesting={:?}",
-            token,
-            self.nesting_level
-        );
+        trace!("Lex token {:?}, nesting={:?}", token, self.nesting_level);
         match token {
             Ok((_, Token::EndOfFile, _)) => None,
-            r => Some(r)
+            r => Some(r),
         }
     }
 }
@@ -177,12 +257,7 @@ mod tests {
     fn test_basics() {
         let source = String::from("foo bar");
         let tokens = lex_source(&source);
-        assert_eq!(
-            tokens,
-            vec![
-                Token::KwDef
-            ]
-        )
+        assert_eq!(tokens, vec![Token::KwDef])
     }
 
 }
