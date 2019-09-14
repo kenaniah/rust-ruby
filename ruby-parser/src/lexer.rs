@@ -6,10 +6,10 @@ mod newline_handler;
 mod tests;
 
 use super::error::{LexicalError, LexicalErrorType};
-use newline_handler::NewlineHandler;
 use super::location::Location;
 pub use super::tokens::Token;
 use log::trace;
+use newline_handler::NewlineHandler;
 use std::collections::HashMap;
 use unicode_xid::UnicodeXID;
 
