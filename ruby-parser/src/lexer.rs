@@ -1,7 +1,12 @@
 //! This module handles the lexing of Ruby source code. The input will be translated into a
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
+mod newline_handler;
+
+#[cfg(test)]
+mod tests;
 
 use super::error::{LexicalError, LexicalErrorType};
+use newline_handler::NewlineHandler;
 use super::location::Location;
 pub use super::tokens::Token;
 use log::trace;
@@ -28,7 +33,8 @@ pub struct Lexer<T: Iterator<Item = char>> {
 }
 
 pub fn make_tokenizer(source: &str) -> impl Iterator<Item = LexResult> + '_ {
-    Lexer::new(source.chars())
+    let nlh = NewlineHandler::new(source.chars());
+    Lexer::new(nlh)
 }
 
 // 8.7.2 - Keywords (alphanumerically)
@@ -106,13 +112,13 @@ where
     /// This function is used by the iterator implementation to retrieve the next token
     fn inner_next(&mut self) -> LexResult {
         while self.pending_tokens.is_empty() {
-            self.consume_normal()?;
+            self.produce_token()?;
         }
         Ok(self.pending_tokens.remove(0))
     }
 
     /// This function takes a look at the next character, if any, and decides on the next steps
-    fn consume_normal(&mut self) -> Result<(), LexicalError> {
+    fn produce_token(&mut self) -> Result<(), LexicalError> {
         // Check if we have some character
         if let Some(c) = self.chr0 {
             // First check for an identifier
@@ -120,7 +126,7 @@ where
                 let identifier = self.lex_identifier()?;
                 self.emit(identifier);
             } else {
-                self.consume_character(c)?;
+                self.consume_non_identifier(c)?;
             }
         } else {
             // We're at the end of the file
@@ -130,24 +136,34 @@ where
     }
 
     /// Consumes non-identifying characters
-    fn consume_character(&mut self, c: char) -> Result<(), LexicalError> {
+    fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
         let tok_start = self.get_pos();
         match c {
-            '\x09' | '\x0b' | '\x0c' | '\x0d' | '\x20' => {
-                // Consume whitespaces
-                self.next_char();
-                while self.chr0 == Some('\x09') || self.chr0 == Some('\x0b') || self.chr0 == Some('\x0c') || self.chr0 == Some('\x0d') || self.chr0 == Some('\x20') {
-                    self.next_char();
+            '\t' | '\x0b' | '\x0c' | '\r' | ' ' => {
+                self.lex_whitespace();
+            }
+            '\n' => {
+                self.emit_from_chars(Token::LineTerminator, 1);
+            }
+            '[' => {
+                self.emit_from_chars(Token::LeftBracket, 1);
+            }
+            ']' => {
+                self.emit_from_chars(Token::RightBracket, 1);
+            }
+            '\\' => {
+                if self.chr1 == Some('\n') {
+                    self.lex_whitespace();
+                } else {
+                    panic!("\\ is not handled yet");
                 }
-                let tok_end = self.get_pos();
-                self.emit((tok_start, Token::Whitespace, tok_end))
             }
             _ => {
                 let c = self.next_char();
                 return Err(LexicalError {
                     location: tok_start,
-                    error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() }
-                })
+                    error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() },
+                });
             }
         }
         Ok(())
@@ -181,6 +197,27 @@ where
         self.pending_tokens.push(spanned);
     }
 
+    /// Helper function to emit tokens from one or more characters
+    fn emit_from_chars(&mut self, token: Token, chars: usize) {
+        let tok_start = self.get_pos();
+        match chars {
+            1 => {
+                self.next_char().unwrap();
+            }
+            2 => {
+                self.next_char().unwrap();
+                self.next_char().unwrap();
+            }
+            3 => {
+                self.next_char().unwrap();
+                self.next_char().unwrap();
+                self.next_char().unwrap();
+            }
+            _ => panic!("emit_from_chars can only consume up to 3 characters at a time"),
+        }
+        self.emit((tok_start, token, self.get_pos()));
+    }
+
     /// Determines whether this character is a valid starting unicode identifier
     fn is_identifier_start(&self, c: char) -> bool {
         match c {
@@ -212,6 +249,12 @@ where
         while self.is_identifier_continuation() {
             name.push(self.next_char().unwrap());
         }
+
+        // Check for an ending ? or ! (valid for method names)
+        if self.chr0 == Some('?') || self.chr0 == Some('!') {
+            name.push(self.next_char().unwrap());
+        }
+
         let end_pos = self.get_pos();
 
         // Emit the token
@@ -223,6 +266,39 @@ where
                 Token::RefactorIdentifier { value: name },
                 end_pos,
             ))
+        }
+    }
+
+    /// Lexes a sequence of whitespace characters and escaped newlines
+    fn lex_whitespace(&mut self) {
+        let tok_start = self.get_pos();
+        if self.chr0 == Some('\n') {
+            // Consume a line terminator
+            self.emit_from_chars(Token::LineTerminator, 2);
+        } else {
+            // Consume whitespaces
+            loop {
+                match self.chr0 {
+                    Some('\t') | Some('\x0b') | Some('\x0c') | Some('\r') | Some(' ') => {
+                        self.next_char();
+                    }
+                    Some('\\') => {
+                        println!("Found \\");
+                        // Check for line continuations
+                        if self.chr1 == Some('\n') {
+                            self.next_char();
+                            self.next_char();
+                        } else {
+                            break;
+                        }
+                    }
+                    _ => {
+                        break;
+                    }
+                }
+            }
+            let tok_end = self.get_pos();
+            self.emit((tok_start, Token::Whitespace, tok_end))
         }
     }
 }
@@ -240,28 +316,4 @@ where
             r => Some(r),
         }
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{make_tokenizer, Token};
-    use std::iter::FromIterator;
-    use std::iter::Iterator;
-
-    pub fn lex_source(source: &String) -> Vec<Token> {
-        let lexer = make_tokenizer(source);
-        Vec::from_iter(lexer.map(|x| x.unwrap().1))
-    }
-
-    #[test]
-    fn test_basics() {
-        let source = String::from("foo bar");
-        let tokens = lex_source(&source);
-        assert_eq!(tokens, vec![
-            Token::RefactorIdentifier { value: String::from("foo") },
-            Token::Whitespace,
-            Token::RefactorIdentifier { value: String::from("bar") }
-        ])
-    }
-
 }
