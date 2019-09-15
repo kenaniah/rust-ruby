@@ -7,4 +7,5 @@ pub fn lex_source(source: &String) -> Vec<Token> {
     Vec::from_iter(lexer.map(|x| x.unwrap().1))
 }
 
+mod comment;
 mod whitespace;

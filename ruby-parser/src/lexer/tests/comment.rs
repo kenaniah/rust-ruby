@@ -8,7 +8,7 @@ fn single_line_comments() {
     assert_eq!(
         tokens,
         vec![Token::Comment {
-            value: "".to_owned()
+            value: "#".to_owned()
         }]
     );
 
@@ -48,7 +48,7 @@ fn single_line_comments() {
                 value: "foo".to_owned()
             },
             Token::Comment {
-                value: "# first comment"
+                value: "# first comment".to_owned()
             },
             Token::LineTerminator,
             Token::RefactorIdentifier {
@@ -58,7 +58,7 @@ fn single_line_comments() {
             Token::Comment {
                 value: "# second comment".to_owned()
             },
-            Token::Whitespace
+            Token::LineTerminator
         ]
     );
 }
