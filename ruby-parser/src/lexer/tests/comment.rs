@@ -3,31 +3,28 @@ use super::*;
 #[test]
 fn single_line_comments() {
     // Test comment only
-    let mut source = "#".to_owned();
-    let mut tokens = lex_source(&source);
+    let mut tokens = lex_source("#".to_owned());
     assert_eq!(
         tokens,
-        vec![Token::Comment {
+        Ok(vec![Token::Comment {
             value: "".to_owned()
-        }]
+        }])
     );
 
     // Test a single line comment
-    source = "# comment goes here".to_owned();
-    tokens = lex_source(&source);
+    tokens = lex_source("# comment goes here".to_owned());
     assert_eq!(
         tokens,
-        vec![Token::Comment {
+        Ok(vec![Token::Comment {
             value: " comment goes here".to_owned()
-        }]
+        }])
     );
 
     // Test two single line comments in a row
-    source = "# first comment\n#second\tcomment".to_owned();
-    tokens = lex_source(&source);
+    tokens = lex_source("# first comment\n#second\tcomment".to_owned());
     assert_eq!(
         tokens,
-        vec![
+        Ok(vec![
             Token::Comment {
                 value: " first comment".to_owned()
             },
@@ -35,15 +32,14 @@ fn single_line_comments() {
             Token::Comment {
                 value: "second\tcomment".to_owned()
             }
-        ]
+        ])
     );
 
     // Test comments after an expression
-    source = "foo# first comment\nbar # second comment\n".to_owned();
-    tokens = lex_source(&source);
+    tokens = lex_source("foo# first comment\nbar # second comment\n".to_owned());
     assert_eq!(
         tokens,
-        vec![
+        Ok(vec![
             Token::RefactorIdentifier {
                 value: "foo".to_owned()
             },
@@ -59,21 +55,18 @@ fn single_line_comments() {
                 value: " second comment".to_owned()
             },
             Token::LineTerminator
-        ]
+        ])
     );
 }
 
 #[test]
 fn multi_line_comments() {
     // Test comment only
-    let mut source = "=begin\nfoo bar\nblah\n=end baz".to_owned();
-    let mut tokens = lex_source(&source);
+    let tokens = lex_source("=begin\nfoo bar\nblah\n=end baz".to_owned());
     assert_eq!(
         tokens,
-        vec![
-            Token::Comment {
-                value: "foo bar\nblah\nbaz".to_owned()
-            }
-        ]
+        Ok(vec![Token::Comment {
+            value: "foo bar\nblah\nbaz".to_owned()
+        }])
     )
 }

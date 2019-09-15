@@ -163,7 +163,7 @@ where
                         if self.is_whitespace(char) || char == '\n' {
                             let comment = self.lex_multi_line_comment()?;
                             self.emit(comment);
-                            return Ok(())
+                            return Ok(());
                         }
                     }
                 }
@@ -185,7 +185,7 @@ where
         assert!(index < 12);
         match self.chr.get(index) {
             Some(c) => *c,
-            None => None
+            None => None,
         }
     }
 
@@ -195,7 +195,7 @@ where
         for i in 0..n {
             match self.chr.get(i) {
                 Some(Some(c)) => str.push(*c),
-                _ => return None
+                _ => return None,
             }
         }
         Some(str.to_owned())
@@ -297,7 +297,7 @@ where
     fn is_whitespace(&self, c: char) -> bool {
         match c {
             ' ' | '\t' | '\x0b' | '\x0c' | '\r' => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -352,7 +352,6 @@ where
 
         // Grab everything until '=end ' is found at the beginning of a line
         loop {
-
             // Check for the end of the multi-line comment and break if found
             if self.get_pos().col() == 1 && self.chars(4) == Some("=end".to_owned()) {
                 if let Some(char) = self.char(4) {
@@ -370,13 +369,12 @@ where
             match self.next_char() {
                 Some(c) => str.push(c),
                 None => {
-                    return Err(LexicalError{
+                    return Err(LexicalError {
                         location: self.get_pos(),
-                        error: LexicalErrorType::UnterminatedMultilineComment
+                        error: LexicalErrorType::UnterminatedMultilineComment,
                     })
                 }
             }
-
         }
 
         // Consume the rest of the line
@@ -384,15 +382,19 @@ where
             match self.char(0) {
                 Some('\n') => break,
                 Some(_) => str.push(self.next_char().unwrap()),
-                None => break
+                None => break,
             }
         }
 
         // Return the lexed result
-        Ok((tok_start, Token::Comment { value: str.to_owned() }, self.get_pos()))
-
+        Ok((
+            tok_start,
+            Token::Comment {
+                value: str.to_owned(),
+            },
+            self.get_pos(),
+        ))
     }
-
 }
 
 impl<T> Iterator for Lexer<T>

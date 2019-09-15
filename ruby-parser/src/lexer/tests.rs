@@ -1,12 +1,22 @@
-use super::{make_tokenizer, Token};
-use std::iter::FromIterator;
-use std::iter::Iterator;
+use super::{make_tokenizer, LexicalError, Token};
 
-// TODO: change this to a Result<Vec<Token>, LexicalError>
-pub fn lex_source(source: &String) -> Vec<Token> {
-    let lexer = make_tokenizer(source);
-    Vec::from_iter(lexer.map(|x| x.unwrap().1))
+/// Lexes the source string, returning a vector of tokens or the lexical error encountered
+pub fn lex_source(source: String) -> Result<Vec<Token>, LexicalError> {
+    let mut lexer = make_tokenizer(&source);
+    let mut tokens: Vec<Token> = Vec::new();
+
+    // Move through the lexer, returning a lexical error if encountered
+    while let Some(x) = lexer.next() {
+        match x {
+            Ok(spanned) => tokens.push(spanned.1),
+            Err(error) => return Err(error),
+        }
+    }
+
+    // Return the lexed tokens
+    Ok(tokens)
 }
 
+// Include the various test suites
 mod comment;
 mod whitespace;

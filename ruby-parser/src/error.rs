@@ -17,7 +17,7 @@ pub enum LexicalErrorType {
     UnicodeError,
     NestingError,
     UnrecognizedToken { token: char },
-    UnterminatedMultilineComment
+    UnterminatedMultilineComment,
 }
 
 impl From<LexicalError> for LalrpopError<Location, Token, LexicalError> {
