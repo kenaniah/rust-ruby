@@ -2,8 +2,8 @@ use super::location::Location;
 use super::tokens::Token;
 use lalrpop_util::ParseError as LalrpopError;
 
-use std::error::Error;
-use std::fmt;
+//use std::error::Error;
+//use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub struct LexicalError {
@@ -17,6 +17,7 @@ pub enum LexicalErrorType {
     UnicodeError,
     NestingError,
     UnrecognizedToken { token: char },
+    UnterminatedMultilineComment
 }
 
 impl From<LexicalError> for LalrpopError<Location, Token, LexicalError> {

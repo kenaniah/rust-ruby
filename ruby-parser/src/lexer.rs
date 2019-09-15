@@ -134,7 +134,7 @@ where
     fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
         let tok_start = self.get_pos();
         match c {
-            '\t' | '\x0b' | '\x0c' | '\r' | ' ' => {
+            ' ' | '\t' | '\x0b' | '\x0c' | '\r' => {
                 self.lex_whitespace();
             }
             '\n' => {
@@ -156,6 +156,19 @@ where
             '#' => {
                 self.lex_single_line_comment();
             }
+            '=' => {
+                // Check for the start of a multi-line comment
+                if self.get_pos().col() == 1 && self.chars(6) == Some("=begin".to_owned()) {
+                    if let Some(char) = self.char(6) {
+                        if self.is_whitespace(char) || char == '\n' {
+                            let comment = self.lex_multi_line_comment()?;
+                            self.emit(comment);
+                            return Ok(())
+                        }
+                    }
+                }
+                panic!("= is not handled yet")
+            }
             _ => {
                 let c = self.next_char();
                 return Err(LexicalError {
@@ -168,12 +181,24 @@ where
     }
 
     /// Helper function that returns the character at the given index (the lexer keeps 12 characters)
-    fn char(&mut self, index: usize) -> Option<char> {
+    fn char(&self, index: usize) -> Option<char> {
         assert!(index < 12);
         match self.chr.get(index) {
             Some(c) => *c,
             None => None
         }
+    }
+
+    /// Helper function that returns the next n number of characters as a string (or None if EOF)
+    fn chars(&self, n: usize) -> Option<String> {
+        let mut str = String::with_capacity(n);
+        for i in 0..n {
+            match self.chr.get(i) {
+                Some(Some(c)) => str.push(*c),
+                _ => return None
+            }
+        }
+        Some(str.to_owned())
     }
 
     /// Helper function that consumes the next upcoming character
@@ -268,6 +293,14 @@ where
         }
     }
 
+    /// Helper function to determine if a character is whitespace (not including newline)
+    fn is_whitespace(&self, c: char) -> bool {
+        match c {
+            ' ' | '\t' | '\x0b' | '\x0c' | '\r' => true,
+            _ => false
+        }
+    }
+
     /// Lexes a sequence of whitespace characters and escaped newlines
     fn lex_whitespace(&mut self) {
         let tok_start = self.get_pos();
@@ -277,23 +310,19 @@ where
         } else {
             // Consume whitespaces
             loop {
-                match self.char(0) {
-                    Some('\t') | Some('\x0b') | Some('\x0c') | Some('\r') | Some(' ') => {
+                if let Some(c) = self.char(0) {
+                    if self.is_whitespace(c) {
+                        // Handle a normal whitespace
                         self.next_char();
-                    }
-                    Some('\\') => {
-                        // Check for line continuations
-                        if self.char(1) == Some('\n') {
-                            self.next_char();
-                            self.next_char();
-                        } else {
-                            break;
-                        }
-                    }
-                    _ => {
-                        break;
+                        continue;
+                    } else if c == '\\' && self.char(1) == Some('\n') {
+                        // Handle line continuations
+                        self.next_char();
+                        self.next_char();
+                        continue;
                     }
                 }
+                break;
             }
             let tok_end = self.get_pos();
             self.emit((tok_start, Token::Whitespace, tok_end))
@@ -304,11 +333,66 @@ where
     fn lex_single_line_comment(&mut self) {
         let tok_start = self.get_pos();
         let mut content = String::new();
+        self.next_char(); // Discard the '#'
         while self.char(0) != Some('\n') && self.char(0) != None {
             content.push(self.next_char().unwrap());
         }
         self.emit((tok_start, Token::Comment { value: content }, self.get_pos()));
     }
+
+    /// Lexes a multi-line comment
+    fn lex_multi_line_comment(&mut self) -> LexResult {
+        let tok_start = self.get_pos();
+        let mut str = String::new();
+
+        // Discard the '=begin '
+        for _ in 1..=7 {
+            self.next_char();
+        }
+
+        // Grab everything until '=end ' is found at the beginning of a line
+        loop {
+
+            // Check for the end of the multi-line comment and break if found
+            if self.get_pos().col() == 1 && self.chars(4) == Some("=end".to_owned()) {
+                if let Some(char) = self.char(4) {
+                    if self.is_whitespace(char) || char == '\n' {
+                        // Discard the '=end '
+                        for _ in 1..=5 {
+                            self.next_char();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Otherwise, consume the next character
+            match self.next_char() {
+                Some(c) => str.push(c),
+                None => {
+                    return Err(LexicalError{
+                        location: self.get_pos(),
+                        error: LexicalErrorType::UnterminatedMultilineComment
+                    })
+                }
+            }
+
+        }
+
+        // Consume the rest of the line
+        loop {
+            match self.char(0) {
+                Some('\n') => break,
+                Some(_) => str.push(self.next_char().unwrap()),
+                None => break
+            }
+        }
+
+        // Return the lexed result
+        Ok((tok_start, Token::Comment { value: str.to_owned() }, self.get_pos()))
+
+    }
+
 }
 
 impl<T> Iterator for Lexer<T>

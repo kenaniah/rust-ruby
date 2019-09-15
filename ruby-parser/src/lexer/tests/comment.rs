@@ -8,7 +8,7 @@ fn single_line_comments() {
     assert_eq!(
         tokens,
         vec![Token::Comment {
-            value: "#".to_owned()
+            value: "".to_owned()
         }]
     );
 
@@ -18,7 +18,7 @@ fn single_line_comments() {
     assert_eq!(
         tokens,
         vec![Token::Comment {
-            value: "# comment goes here".to_owned()
+            value: " comment goes here".to_owned()
         }]
     );
 
@@ -29,11 +29,11 @@ fn single_line_comments() {
         tokens,
         vec![
             Token::Comment {
-                value: "# first comment".to_owned()
+                value: " first comment".to_owned()
             },
             Token::LineTerminator,
             Token::Comment {
-                value: "#second\tcomment".to_owned()
+                value: "second\tcomment".to_owned()
             }
         ]
     );
@@ -48,7 +48,7 @@ fn single_line_comments() {
                 value: "foo".to_owned()
             },
             Token::Comment {
-                value: "# first comment".to_owned()
+                value: " first comment".to_owned()
             },
             Token::LineTerminator,
             Token::RefactorIdentifier {
@@ -56,9 +56,24 @@ fn single_line_comments() {
             },
             Token::Whitespace,
             Token::Comment {
-                value: "# second comment".to_owned()
+                value: " second comment".to_owned()
             },
             Token::LineTerminator
         ]
     );
+}
+
+#[test]
+fn multi_line_comments() {
+    // Test comment only
+    let mut source = "=begin\nfoo bar\nblah\n=end baz".to_owned();
+    let mut tokens = lex_source(&source);
+    assert_eq!(
+        tokens,
+        vec![
+            Token::Comment {
+                value: "foo bar\nblah\nbaz".to_owned()
+            }
+        ]
+    )
 }
