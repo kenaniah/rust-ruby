@@ -287,7 +287,6 @@ where
                         self.next_char();
                     }
                     Some('\\') => {
-                        println!("Found \\");
                         // Check for line continuations
                         if self.chr1 == Some('\n') {
                             self.next_char();
