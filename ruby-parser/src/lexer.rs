@@ -11,6 +11,7 @@ pub use super::tokens::Token;
 use log::trace;
 use newline_handler::NewlineHandler;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
 
 /// Composite type that tracks a token and its starting and ending location
@@ -21,13 +22,10 @@ pub type LexResult = Result<Spanned, LexicalError>;
 
 /// Holds the lexer's current state
 pub struct Lexer<T: Iterator<Item = char>> {
-    chars: T,
-    at_line_start: bool,
+    input: T,
     nesting_level: usize,
     pending_tokens: Vec<Spanned>,
-    chr0: Option<char>,
-    chr1: Option<char>,
-    chr2: Option<char>,
+    chr: VecDeque<Option<char>>,
     location: Location,
     keywords: HashMap<String, Token>,
 }
@@ -88,24 +86,21 @@ impl<T> Lexer<T>
 where
     T: Iterator<Item = char>,
 {
-    /// Initializes a lexer and pre-reads the first 3 characters
+    /// Initializes a lexer and pre-reads the first 12 characters
     pub fn new(input: T) -> Self {
         let mut lxr = Lexer {
-            chars: input,
-            at_line_start: true,
+            input: input,
             nesting_level: 0,
             pending_tokens: Vec::new(),
-            chr0: None,
-            chr1: None,
-            chr2: None,
+            chr: VecDeque::with_capacity(12),
             location: Location::new(0, 0),
             keywords: get_keywords(),
         };
-        // Preload the first 3 characters into the lexer
-        lxr.next_char();
-        lxr.next_char();
-        lxr.next_char();
-        lxr.location.reset(); // Moves back to line 1, col 1
+        // Preload the first 12 characters into the lexer
+        for _ in 1..=12 {
+            lxr.chr.push_back(lxr.input.next());
+        }
+        lxr.location.reset(); // Moves to line 1, col 1
         lxr
     }
 
@@ -120,7 +115,7 @@ where
     /// This function takes a look at the next character, if any, and decides on the next steps
     fn produce_token(&mut self) -> Result<(), LexicalError> {
         // Check if we have some character
-        if let Some(c) = self.chr0 {
+        if let Some(c) = self.char(0) {
             // First check for an identifier
             if self.is_identifier_start(c) {
                 let identifier = self.lex_identifier()?;
@@ -152,7 +147,7 @@ where
                 self.emit_from_chars(Token::RightBracket, 1);
             }
             '\\' => {
-                if self.chr1 == Some('\n') {
+                if self.char(1) == Some('\n') {
                     self.lex_whitespace();
                 } else {
                     panic!("\\ is not handled yet");
@@ -172,14 +167,21 @@ where
         Ok(())
     }
 
+    /// Helper function that returns the character at the given index (the lexer keeps 12 characters)
+    fn char(&mut self, index: usize) -> Option<char> {
+        assert!(index < 12);
+        match self.chr.get(index) {
+            Some(c) => *c,
+            None => None
+        }
+    }
+
     /// Helper function that consumes the next upcoming character
     /// This method will also adjust the lexer's current location accordingly
     fn next_char(&mut self) -> Option<char> {
         // Shift the stack of upcoming characters
-        let c = self.chr0;
-        self.chr0 = self.chr1;
-        self.chr1 = self.chr2;
-        self.chr2 = self.chars.next();
+        let c = self.chr.pop_front()?;
+        self.chr.push_back(self.input.next());
 
         // Update the lexer's source location
         if c == Some('\n') {
@@ -204,19 +206,12 @@ where
     fn emit_from_chars(&mut self, token: Token, chars: usize) {
         let tok_start = self.get_pos();
         match chars {
-            1 => {
-                self.next_char().unwrap();
+            1..=12 => {
+                for _ in 1..=chars {
+                    self.next_char().unwrap();
+                }
             }
-            2 => {
-                self.next_char().unwrap();
-                self.next_char().unwrap();
-            }
-            3 => {
-                self.next_char().unwrap();
-                self.next_char().unwrap();
-                self.next_char().unwrap();
-            }
-            _ => panic!("emit_from_chars can only consume up to 3 characters at a time"),
+            _ => panic!("emit_from_chars can only consume up to 12 characters at a time"),
         }
         self.emit((tok_start, token, self.get_pos()));
     }
@@ -230,8 +225,8 @@ where
     }
 
     /// Determines whether the character is the continuation of a valid unicode identifier
-    fn is_identifier_continuation(&self) -> bool {
-        if let Some(c) = self.chr0 {
+    fn is_identifier_continuation(&mut self) -> bool {
+        if let Some(c) = self.char(0) {
             match c {
                 '_' | '0'..='9' => true,
                 c => UnicodeXID::is_xid_continue(c),
@@ -255,7 +250,7 @@ where
         }
 
         // Check for an ending ? or ! (valid for method names)
-        if self.chr0 == Some('?') || self.chr0 == Some('!') {
+        if self.char(0) == Some('?') || self.char(0) == Some('!') {
             name.push(self.next_char().unwrap());
         }
 
@@ -276,19 +271,19 @@ where
     /// Lexes a sequence of whitespace characters and escaped newlines
     fn lex_whitespace(&mut self) {
         let tok_start = self.get_pos();
-        if self.chr0 == Some('\n') {
+        if self.char(0) == Some('\n') {
             // Consume a line terminator
             self.emit_from_chars(Token::LineTerminator, 2);
         } else {
             // Consume whitespaces
             loop {
-                match self.chr0 {
+                match self.char(0) {
                     Some('\t') | Some('\x0b') | Some('\x0c') | Some('\r') | Some(' ') => {
                         self.next_char();
                     }
                     Some('\\') => {
                         // Check for line continuations
-                        if self.chr1 == Some('\n') {
+                        if self.char(1) == Some('\n') {
                             self.next_char();
                             self.next_char();
                         } else {
@@ -309,8 +304,7 @@ where
     fn lex_single_line_comment(&mut self) {
         let tok_start = self.get_pos();
         let mut content = String::new();
-        content.push(self.next_char().unwrap());
-        while self.chr0 != Some('\n') && self.chr0 != None {
+        while self.char(0) != Some('\n') && self.char(0) != None {
             content.push(self.next_char().unwrap());
         }
         self.emit((tok_start, Token::Comment { value: content }, self.get_pos()));
