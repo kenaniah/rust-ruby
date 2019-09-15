@@ -62,11 +62,22 @@ fn single_line_comments() {
 #[test]
 fn multi_line_comments() {
     // Test comment only
-    let tokens = lex_source("=begin\nfoo bar\nblah\n=end baz");
+    let tokens = lex_source("=begin\nfoo bar\nblah\n=end baz\nmeh");
     assert_eq!(
         tokens,
-        Ok(vec![Token::Comment {
-            value: "foo bar\nblah\nbaz".to_owned()
-        }])
-    )
+        Ok(vec![
+            Token::Comment {
+                value: "foo bar\nblah\nbaz".to_owned()
+            },
+            Token::LineTerminator,
+            Token::RefactorIdentifier {
+                value: "meh".to_owned()
+            }
+        ])
+    );
+    let tokens = lex_source("=begin stuff\nblah\n");
+    assert_eq!(
+        tokens,
+        Err(LexicalError { error: LexicalErrorType::UnterminatedMultilineComment, location: Location { row: 3, col: 1 } })
+    );
 }

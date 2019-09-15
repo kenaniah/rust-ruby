@@ -211,7 +211,7 @@ where
         // Update the lexer's source location
         if c == Some('\n') {
             self.location.newline();
-        } else {
+        } else if let Some(_) = c {
             self.location.move_right();
         }
         c

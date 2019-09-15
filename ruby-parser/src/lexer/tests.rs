@@ -1,4 +1,8 @@
-use super::{make_tokenizer, LexicalError, Token};
+use super::*;
+
+pub fn enable_logging() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}
 
 /// Lexes the source string, returning a vector of tokens or the lexical error encountered
 pub fn lex_source(source: &str) -> Result<Vec<Token>, LexicalError> {

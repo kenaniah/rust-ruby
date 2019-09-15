@@ -6,8 +6,8 @@ use std::fmt;
 /// Struct used to track the line and column numbers of lexed tokens
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Location {
-    row: usize,
-    col: usize,
+    pub row: usize,
+    pub col: usize,
 }
 
 impl fmt::Display for Location {
