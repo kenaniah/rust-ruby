@@ -8,7 +8,7 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub struct LexicalError {
     pub error: LexicalErrorType,
-    pub location: Location
+    pub location: Location,
 }
 
 #[derive(Debug, PartialEq)]
@@ -16,7 +16,7 @@ pub enum LexicalErrorType {
     StringError,
     UnicodeError,
     NestingError,
-    UnrecognizedToken { token: char }
+    UnrecognizedToken { token: char },
 }
 
 impl From<LexicalError> for LalrpopError<Location, Token, LexicalError> {

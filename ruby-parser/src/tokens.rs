@@ -11,7 +11,7 @@ pub enum Token {
     // 8.4 - Whitespace
     Whitespace, // tab (0x09), vertical tab (0x0b), form feed (0x0c), carriage return (0x0d), space (0x20)
     // 8.5 - Comments
-    Comment,
+    Comment { value: String },
     // 8.6 - End of program markers
     EndOfProgramMarker, // __END__
     // 8.7.2 - Keywords (alphanumerically)
@@ -133,5 +133,5 @@ pub enum Token {
     Regex { value: String },
     Symbol { value: String },
     // Things that need refactoring down the line
-    RefactorIdentifier { value: String }
+    RefactorIdentifier { value: String },
 }

@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Location {
     row: usize,
-    col: usize
+    col: usize,
 }
 
 impl fmt::Display for Location {

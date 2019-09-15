@@ -1,4 +1,5 @@
-#[macro_use] extern crate lalrpop_util;
+#[macro_use]
+extern crate lalrpop_util;
 
 lalrpop_mod!(pub ruby26);
 pub mod error;
@@ -17,6 +18,8 @@ mod tests {
     #[test]
     fn second() {
         assert!(ruby26::InputElementParser::new().parse("foo\n").is_ok());
-        assert!(ruby26::InputElementParser::new().parse("\r\n__END__asldfjdsalfk").is_ok());
+        assert!(ruby26::InputElementParser::new()
+            .parse("\r\n__END__asldfjdsalfk")
+            .is_ok());
     }
 }

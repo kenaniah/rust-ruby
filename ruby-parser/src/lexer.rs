@@ -158,6 +158,9 @@ where
                     panic!("\\ is not handled yet");
                 }
             }
+            '#' => {
+                self.lex_single_line_comment();
+            }
             _ => {
                 let c = self.next_char();
                 return Err(LexicalError {
@@ -238,6 +241,7 @@ where
         }
     }
 
+    /// Lexes a named identifier
     fn lex_identifier(&mut self) -> LexResult {
         let mut name = String::new();
         let start_pos = self.get_pos();
@@ -300,6 +304,17 @@ where
             let tok_end = self.get_pos();
             self.emit((tok_start, Token::Whitespace, tok_end))
         }
+    }
+
+    /// Lexes a single-line comment
+    fn lex_single_line_comment(&mut self) {
+        let tok_start = self.get_pos();
+        let mut content = String::new();
+        content.push(self.next_char().unwrap());
+        while self.chr0 != Some('\n') && self.chr0 != None {
+            content.push(self.next_char().unwrap());
+        }
+        self.emit((tok_start, Token::Comment { value: content }, self.get_pos()));
     }
 }
 
