@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn whitespace_and_newlines() {
-    let tokens = lex_source("  \x0c \x0b  \t \t \n\r\n\n\r".to_owned());
+    let tokens = lex_source("  \x0c \x0b  \t \t \n\r\n\n\r");
     assert_eq!(
         tokens,
         Ok(vec![
@@ -17,7 +17,7 @@ fn whitespace_and_newlines() {
 
 #[test]
 fn continued_lines() {
-    let tokens = lex_source("foo\\\r\n\\\nbar \\\n baz\n".to_owned());
+    let tokens = lex_source("foo\\\r\n\\\nbar \\\n baz\n");
     assert_eq!(
         tokens,
         Ok(vec![
@@ -39,6 +39,6 @@ fn continued_lines() {
 
 #[test]
 fn continued_line_only() {
-    let tokens = lex_source("\\\n\n".to_owned());
+    let tokens = lex_source("\\\n\n");
     assert_eq!(tokens, Ok(vec![Token::Whitespace, Token::LineTerminator]));
 }

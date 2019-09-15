@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn single_line_comments() {
     // Test comment only
-    let mut tokens = lex_source("#".to_owned());
+    let mut tokens = lex_source("#");
     assert_eq!(
         tokens,
         Ok(vec![Token::Comment {
@@ -12,7 +12,7 @@ fn single_line_comments() {
     );
 
     // Test a single line comment
-    tokens = lex_source("# comment goes here".to_owned());
+    tokens = lex_source("# comment goes here");
     assert_eq!(
         tokens,
         Ok(vec![Token::Comment {
@@ -21,7 +21,7 @@ fn single_line_comments() {
     );
 
     // Test two single line comments in a row
-    tokens = lex_source("# first comment\n#second\tcomment".to_owned());
+    tokens = lex_source("# first comment\n#second\tcomment");
     assert_eq!(
         tokens,
         Ok(vec![
@@ -36,7 +36,7 @@ fn single_line_comments() {
     );
 
     // Test comments after an expression
-    tokens = lex_source("foo# first comment\nbar # second comment\n".to_owned());
+    tokens = lex_source("foo# first comment\nbar # second comment\n");
     assert_eq!(
         tokens,
         Ok(vec![
@@ -62,7 +62,7 @@ fn single_line_comments() {
 #[test]
 fn multi_line_comments() {
     // Test comment only
-    let tokens = lex_source("=begin\nfoo bar\nblah\n=end baz".to_owned());
+    let tokens = lex_source("=begin\nfoo bar\nblah\n=end baz");
     assert_eq!(
         tokens,
         Ok(vec![Token::Comment {
