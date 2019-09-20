@@ -2,3 +2,4 @@
 extern crate bitflags;
 
 mod value;
+mod lexer;
