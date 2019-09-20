@@ -1,6 +1,6 @@
-use std::io::{self, Write};
-use rustyline::Editor;
 use rustyline::error::ReadlineError;
+use rustyline::Editor;
+use std::io::{self, Write};
 
 #[cfg(target_arch = "wasm32")]
 fn main() {}
@@ -8,7 +8,6 @@ fn main() {}
 #[cfg(not(target_arch = "wasm32"))]
 /// Runs a REPL interpreter
 fn main() -> Result<(), Error> {
-
     let mut output = io::stdout();
     let mut error = io::stderr();
     let history_file = format!("{}/.irb_history", std::env::var("HOME").unwrap());
@@ -24,14 +23,14 @@ fn main() -> Result<(), Error> {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
                 writeln!(output, "Line: {}", line).map_err(Error::Io)?;
-            },
+            }
             Err(ReadlineError::Interrupted) => {
                 writeln!(output, "Ctrl-C").map_err(Error::Io)?;
                 break;
-            },
+            }
             Err(ReadlineError::Eof) => {
                 writeln!(output, "Ctrl-D").map_err(Error::Io)?;
-            },
+            }
             Err(err) => {
                 writeln!(error, "Error: {:?}", err).map_err(Error::Io)?;
             }
@@ -43,11 +42,10 @@ fn main() -> Result<(), Error> {
 
     // Exit
     Ok(())
-
 }
 
 #[derive(Debug)]
 pub enum Error {
     /// IO error when writing to output or error streams
-    Io(io::Error)
+    Io(io::Error),
 }
