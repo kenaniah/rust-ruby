@@ -5,9 +5,15 @@ mod newline_handler;
 #[cfg(test)]
 mod tests;
 
-use super::error::{LexicalError, LexicalErrorType};
-use super::location::Location;
-pub use super::tokens::Token;
+mod error;
+mod lex_state;
+mod location;
+mod tokens;
+
+use self::error::{LexicalError, LexicalErrorType};
+use self::lex_state::LexState;
+use self::location::Location;
+pub use self::tokens::Token;
 use log::trace;
 use newline_handler::NewlineHandler;
 use std::collections::HashMap;
@@ -28,58 +34,10 @@ pub struct Lexer<T: Iterator<Item = char>> {
     chr: VecDeque<Option<char>>,
     location: Location,
     keywords: HashMap<String, Token>,
-}
-
-pub fn make_tokenizer(source: &str) -> impl Iterator<Item = LexResult> + '_ {
-    let nlh = NewlineHandler::new(source.chars());
-    Lexer::new(nlh)
-}
-
-// 8.7.2 - Keywords (alphanumerically)
-pub fn get_keywords() -> HashMap<String, Token> {
-    let mut keywords: HashMap<String, Token> = HashMap::new();
-    keywords.insert(String::from("__LINE__"), Token::KwLINE);
-    keywords.insert(String::from("__ENCODING__"), Token::KwENCODING);
-    keywords.insert(String::from("__FILE__"), Token::KwFILE);
-    keywords.insert(String::from("BEGIN"), Token::KwBEGIN);
-    keywords.insert(String::from("END"), Token::KwEND);
-    keywords.insert(String::from("alias"), Token::KwAlias);
-    keywords.insert(String::from("and"), Token::KwAnd);
-    keywords.insert(String::from("begin"), Token::KwBegin);
-    keywords.insert(String::from("break"), Token::KwBreak);
-    keywords.insert(String::from("case"), Token::KwCase);
-    keywords.insert(String::from("class"), Token::KwClass);
-    keywords.insert(String::from("def"), Token::KwDef);
-    keywords.insert(String::from("defined?"), Token::KwDefined);
-    keywords.insert(String::from("do"), Token::KwDo);
-    keywords.insert(String::from("else"), Token::KwElse);
-    keywords.insert(String::from("elsif"), Token::KwElsif);
-    keywords.insert(String::from("end"), Token::KwEnd);
-    keywords.insert(String::from("ensure"), Token::KwEnsure);
-    keywords.insert(String::from("for"), Token::KwFor);
-    keywords.insert(String::from("false"), Token::KwFalse);
-    keywords.insert(String::from("if"), Token::KwIf);
-    keywords.insert(String::from("in"), Token::KwIn);
-    keywords.insert(String::from("module"), Token::KwModule);
-    keywords.insert(String::from("next"), Token::KwNext);
-    keywords.insert(String::from("nil"), Token::KwNil);
-    keywords.insert(String::from("not"), Token::KwNot);
-    keywords.insert(String::from("or"), Token::KwOr);
-    keywords.insert(String::from("redo"), Token::KwRedo);
-    keywords.insert(String::from("rescue"), Token::KwRescue);
-    keywords.insert(String::from("retry"), Token::KwRetry);
-    keywords.insert(String::from("return"), Token::KwReturn);
-    keywords.insert(String::from("self"), Token::KwSelf);
-    keywords.insert(String::from("super"), Token::KwSuper);
-    keywords.insert(String::from("then"), Token::KwThen);
-    keywords.insert(String::from("true"), Token::KwTrue);
-    keywords.insert(String::from("undef"), Token::KwUndef);
-    keywords.insert(String::from("unless"), Token::KwUnless);
-    keywords.insert(String::from("until"), Token::KwUntil);
-    keywords.insert(String::from("when"), Token::KwWhen);
-    keywords.insert(String::from("while"), Token::KwWhile);
-    keywords.insert(String::from("yield"), Token::KwYield);
-    keywords
+    lex_state: LexState,
+    parsing_heredoc: bool,
+    lex_strterm: bool,
+    seen_whitespace: bool
 }
 
 impl<T> Lexer<T>
@@ -95,6 +53,10 @@ where
             chr: VecDeque::with_capacity(12),
             location: Location::new(0, 0),
             keywords: get_keywords(),
+            lex_state: LexState::EXPR_BEG,
+            parsing_heredoc: false,
+            lex_strterm: false,
+            seen_whitespace: false
         };
         // Preload the first 12 characters into the lexer
         for _ in 1..=12 {
@@ -112,22 +74,126 @@ where
         Ok(self.pending_tokens.remove(0))
     }
 
-    /// This function takes a look at the next character, if any, and decides on the next steps
+    /// This function takes a look at the next character, if any, and emits the relevant token
     fn produce_token(&mut self) -> Result<(), LexicalError> {
-        // Check if we have some character
-        if let Some(c) = self.char(0) {
-            // First check for an identifier
-            if self.is_identifier_start(c) {
-                let identifier = self.lex_identifier()?;
-                self.emit(identifier);
-            } else {
-                self.consume_non_identifier(c)?;
+
+        self.seen_whitespace = false;
+
+        while let Some(c) = self.char(0) {
+
+            // TODO: check if we're in a string first
+            // parse.y:4700
+            // parse.y:4713
+
+            // Handle whitespace
+            if self.is_whitespace(c) {
+                self.seen_whitespace = true;
+                self.next_char();
+                continue;
             }
-        } else {
-            // We're at the end of the file
-            self.emit((self.get_pos(), Token::EndOfFile, self.get_pos()));
+
+            match c {
+                '#' => {
+                    // found a comment
+                    self.lex_single_line_comment();
+                    break;
+                }
+                '\n' => {
+                    // TODO: parse.y:4733
+                    match self.lex_state {
+                        LexState::EXPR_BEG
+                        | LexState::EXPR_FNAME
+                        | LexState::EXPR_DOT
+                        | LexState::EXPR_CLASS
+                        | LexState::EXPR_VALUE
+                        => {
+                            if !self.parsing_heredoc && self.lex_strterm {
+                                // self.parse_string();
+                                unimplemented!();
+                                break;
+                            }
+                            self.next_char();
+                            continue;
+                        }
+                        _ => {}
+                    }
+                    if !self.parsing_heredoc {
+                        self.emit_from_chars(Token::LineTerminator, 1);
+                        break;
+                    }
+                    // TODO: parse.y:4754
+                    unimplemented!()
+                }
+                '*' => {
+
+                    // **=
+                    if self.chars(3) == Some("**=".to_owned()) {
+                        self.emit_from_chars(Token::AssignmentOperator { value: "**=".to_owned() }, 3);
+                    }
+                    // **
+                    else if self.char(1) == Some('*') {
+                        if self.is_spcarg(c) {
+                            self.warn("'**' interpreted as argument prefix");
+                            self.emit_from_chars(Token::TwoStar, 2);
+                        } else if self.is_beg() {
+                            self.emit_from_chars(Token::TwoStar, 2);
+                        } else {
+                            self.emit_from_chars(Token::OpExponent, 2);
+                        }
+                    }
+                    // *=
+                    else if self.char(1) == Some('='){
+                        self.emit_from_chars(Token::AssignmentOperator { value: "*=".to_owned() }, 2);
+                    }
+                    // *
+                    else if self.is_spcarg(c) {
+                        self.warn("'*' interpreted as argument prefix");
+                        self.emit_from_chars(Token::Star, 1);
+                    }
+                    else if self.is_beg() {
+                        self.emit_from_chars(Token::Star, 1);
+                    }
+                    else {
+                        self.emit_from_chars(Token::OpMultiply, 1);
+                    }
+
+                    // Update the lexer's state
+                    if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
+                        self.lex_state = LexState::EXPR_ARG;
+                    }  else {
+                        self.lex_state = LexState::EXPR_BEG;
+                    }
+
+                    break;
+                }
+                _ => unimplemented!()
+            }
+
         }
+
         Ok(())
+    }
+
+    fn is_arg(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_ARG | LexState::EXPR_CMDARG => true,
+            _ => false
+        }
+    }
+    fn is_end(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_END | LexState::EXPR_ENDARG | LexState::EXPR_ENDFN => true,
+            _ => false
+        }
+    }
+    fn is_beg(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_BEG | LexState::EXPR_MID | LexState::EXPR_VALUE | LexState::EXPR_CLASS => true,
+            _ => false
+        }
+    }
+    fn is_spcarg(&self, c: char) -> bool {
+        self.is_arg() && self.seen_whitespace && !self.is_whitespace(c)
     }
 
     /// Consumes non-identifying characters
@@ -198,7 +264,7 @@ where
                 _ => return None,
             }
         }
-        Some(str.to_owned())
+        Some(str)
     }
 
     /// Helper function that consumes the next upcoming character
@@ -223,7 +289,15 @@ where
     }
 
     /// Helper function to emit a lexed token to the queue of tokens
+    /// This may also adjust the lexing state on certain token types
     fn emit(&mut self, spanned: Spanned) {
+        match spanned.1 {
+            // Assignments should change the lexing state
+            Token::AssignmentOperator { value: _ } => {
+                self.lex_state = LexState::EXPR_BEG;
+            }
+            _ => {}
+        }
         self.pending_tokens.push(spanned);
     }
 
@@ -395,6 +469,10 @@ where
             self.get_pos(),
         ))
     }
+
+    fn warn(&self, _msg: &str) {
+        // Do something with the string
+    }
 }
 
 impl<T> Iterator for Lexer<T>
@@ -410,4 +488,56 @@ where
             r => Some(r),
         }
     }
+}
+
+pub fn make_tokenizer(source: &str) -> impl Iterator<Item = LexResult> + '_ {
+    let nlh = NewlineHandler::new(source.chars());
+    Lexer::new(nlh)
+}
+
+// 8.7.2 - Keywords (alphanumerically)
+pub fn get_keywords() -> HashMap<String, Token> {
+    let mut keywords: HashMap<String, Token> = HashMap::new();
+    keywords.insert(String::from("__LINE__"), Token::KwLINE);
+    keywords.insert(String::from("__ENCODING__"), Token::KwENCODING);
+    keywords.insert(String::from("__FILE__"), Token::KwFILE);
+    keywords.insert(String::from("BEGIN"), Token::KwBEGIN);
+    keywords.insert(String::from("END"), Token::KwEND);
+    keywords.insert(String::from("alias"), Token::KwAlias);
+    keywords.insert(String::from("and"), Token::KwAnd);
+    keywords.insert(String::from("begin"), Token::KwBegin);
+    keywords.insert(String::from("break"), Token::KwBreak);
+    keywords.insert(String::from("case"), Token::KwCase);
+    keywords.insert(String::from("class"), Token::KwClass);
+    keywords.insert(String::from("def"), Token::KwDef);
+    keywords.insert(String::from("defined?"), Token::KwDefined);
+    keywords.insert(String::from("do"), Token::KwDo);
+    keywords.insert(String::from("else"), Token::KwElse);
+    keywords.insert(String::from("elsif"), Token::KwElsif);
+    keywords.insert(String::from("end"), Token::KwEnd);
+    keywords.insert(String::from("ensure"), Token::KwEnsure);
+    keywords.insert(String::from("for"), Token::KwFor);
+    keywords.insert(String::from("false"), Token::KwFalse);
+    keywords.insert(String::from("if"), Token::KwIf);
+    keywords.insert(String::from("in"), Token::KwIn);
+    keywords.insert(String::from("module"), Token::KwModule);
+    keywords.insert(String::from("next"), Token::KwNext);
+    keywords.insert(String::from("nil"), Token::KwNil);
+    keywords.insert(String::from("not"), Token::KwNot);
+    keywords.insert(String::from("or"), Token::KwOr);
+    keywords.insert(String::from("redo"), Token::KwRedo);
+    keywords.insert(String::from("rescue"), Token::KwRescue);
+    keywords.insert(String::from("retry"), Token::KwRetry);
+    keywords.insert(String::from("return"), Token::KwReturn);
+    keywords.insert(String::from("self"), Token::KwSelf);
+    keywords.insert(String::from("super"), Token::KwSuper);
+    keywords.insert(String::from("then"), Token::KwThen);
+    keywords.insert(String::from("true"), Token::KwTrue);
+    keywords.insert(String::from("undef"), Token::KwUndef);
+    keywords.insert(String::from("unless"), Token::KwUnless);
+    keywords.insert(String::from("until"), Token::KwUntil);
+    keywords.insert(String::from("when"), Token::KwWhen);
+    keywords.insert(String::from("while"), Token::KwWhile);
+    keywords.insert(String::from("yield"), Token::KwYield);
+    keywords
 }
