@@ -37,7 +37,7 @@ pub struct Lexer<T: Iterator<Item = char>> {
     lex_state: LexState,
     parsing_heredoc: bool,
     lex_strterm: bool,
-    seen_whitespace: bool
+    seen_whitespace: bool,
 }
 
 impl<T> Lexer<T>
@@ -56,7 +56,7 @@ where
             lex_state: LexState::EXPR_BEG,
             parsing_heredoc: false,
             lex_strterm: false,
-            seen_whitespace: false
+            seen_whitespace: false,
         };
         // Preload the first 12 characters into the lexer
         for _ in 1..=12 {
@@ -76,11 +76,9 @@ where
 
     /// This function takes a look at the next character, if any, and emits the relevant token
     fn produce_token(&mut self) -> Result<(), LexicalError> {
-
         self.seen_whitespace = false;
 
         while let Some(c) = self.char(0) {
-
             // TODO: check if we're in a string first
             // parse.y:4700
             // parse.y:4713
@@ -105,8 +103,7 @@ where
                         | LexState::EXPR_FNAME
                         | LexState::EXPR_DOT
                         | LexState::EXPR_CLASS
-                        | LexState::EXPR_VALUE
-                        => {
+                        | LexState::EXPR_VALUE => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
                                 unimplemented!();
@@ -125,10 +122,16 @@ where
                     unimplemented!()
                 }
                 '*' => {
+                    // parse.y:4795
 
                     // **=
                     if self.chars(3) == Some("**=".to_owned()) {
-                        self.emit_from_chars(Token::AssignmentOperator { value: "**=".to_owned() }, 3);
+                        self.emit_from_chars(
+                            Token::AssignmentOperator {
+                                value: "**=".to_owned(),
+                            },
+                            3,
+                        );
                     }
                     // **
                     else if self.char(1) == Some('*') {
@@ -142,33 +145,126 @@ where
                         }
                     }
                     // *=
-                    else if self.char(1) == Some('='){
-                        self.emit_from_chars(Token::AssignmentOperator { value: "*=".to_owned() }, 2);
+                    else if self.char(1) == Some('=') {
+                        self.emit_from_chars(
+                            Token::AssignmentOperator {
+                                value: "*=".to_owned(),
+                            },
+                            2,
+                        );
                     }
                     // *
                     else if self.is_spcarg(c) {
                         self.warn("'*' interpreted as argument prefix");
                         self.emit_from_chars(Token::Star, 1);
-                    }
-                    else if self.is_beg() {
+                    } else if self.is_beg() {
                         self.emit_from_chars(Token::Star, 1);
-                    }
-                    else {
+                    } else {
                         self.emit_from_chars(Token::OpMultiply, 1);
                     }
 
                     // Update the lexer's state
-                    if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
-                        self.lex_state = LexState::EXPR_ARG;
-                    }  else {
-                        self.lex_state = LexState::EXPR_BEG;
-                    }
+                    self.set_lexer_newline_state();
 
                     break;
                 }
-                _ => unimplemented!()
+                '!' => {
+                    // parse.y:4840
+                    self.set_lexer_newline_state();
+                    // !=
+                    if self.char(1) == Some('=') {
+                        self.emit_from_chars(Token::OpNotEqual, 2);
+                        break;
+                    }
+                    // !~
+                    if self.char(1) == Some('~') {
+                        self.emit_from_chars(Token::OpNotMatch, 2);
+                        break;
+                    }
+                    // !
+                    self.emit_from_chars(Token::OpNot, 1);
+                    break;
+                }
+                '=' => {
+                    //  parse.y:4860
+                    // TODO: parse.y:4861 (multi-line comments)
+                    self.set_lexer_newline_state();
+                    // ===
+                    if self.chars(3) == Some("===".to_owned()) {
+                        self.emit_from_chars(Token::OpTripleEqual, 3);
+                    }
+                    // ==
+                    else if self.char(1) == Some('=') {
+                        self.emit_from_chars(Token::OpDoubleEqual, 2);;
+                    }
+                    // =~
+                    else if self.char(1) == Some('~') {
+                        self.emit_from_chars(Token::OpMatch, 2);
+                    }
+                    // =>
+                    else if self.char(1) == Some('>') {
+                        self.emit_from_chars(Token::Arrow, 2);
+                    }
+                    // =
+                    self.emit_from_chars(Token::OpAssign, 1);
+                    break;
+                }
+                '<' => {
+                    // parse.y:4903
+                    unimplemented!()
+                }
+                '>' => {
+                    // parse.y:4942
+                    self.set_lexer_newline_state();
+                    // >=
+                    if self.char(1) == Some('=') {
+                        self.emit_from_chars(Token::OpGtEqual, 2);
+                        break;
+                    }
+                    if self.char(1) == Some('>') {
+                        // >>=
+                        if self.char(2) == Some('=') {
+                            self.emit_from_chars(
+                                Token::AssignmentOperator {
+                                    value: ">>=".to_owned(),
+                                },
+                                3,
+                            );
+                            break;
+                        }
+                        // >>
+                        self.emit_from_chars(Token::OpRightShift, 2);
+                        break;
+                    }
+                    self.emit_from_chars(Token::OpGt, 1);
+                    break;
+                }
+                '"' => {
+                    // parse.y:4964
+                    unimplemented!()
+                }
+                '\'' => {
+                    // parse.y:4968
+                    unimplemented!()
+                }
+                '`' => {
+                    // parse.y:4972
+                    unimplemented!()
+                }
+                '?' => {
+                    // parse.y:4987
+                    unimplemented!()
+                }
+                '&' => {
+                    // parse.y:5058
+                    unimplemented!()
+                }
+                '|' => {
+                    // parse.y:5097
+                    unimplemented!()
+                }
+                _ => unimplemented!(),
             }
-
         }
 
         Ok(())
@@ -177,19 +273,22 @@ where
     fn is_arg(&self) -> bool {
         match self.lex_state {
             LexState::EXPR_ARG | LexState::EXPR_CMDARG => true,
-            _ => false
+            _ => false,
         }
     }
     fn is_end(&self) -> bool {
         match self.lex_state {
             LexState::EXPR_END | LexState::EXPR_ENDARG | LexState::EXPR_ENDFN => true,
-            _ => false
+            _ => false,
         }
     }
     fn is_beg(&self) -> bool {
         match self.lex_state {
-            LexState::EXPR_BEG | LexState::EXPR_MID | LexState::EXPR_VALUE | LexState::EXPR_CLASS => true,
-            _ => false
+            LexState::EXPR_BEG
+            | LexState::EXPR_MID
+            | LexState::EXPR_VALUE
+            | LexState::EXPR_CLASS => true,
+            _ => false,
         }
     }
     fn is_spcarg(&self, c: char) -> bool {
@@ -313,6 +412,15 @@ where
             _ => panic!("emit_from_chars can only consume up to 12 characters at a time"),
         }
         self.emit((tok_start, token, self.get_pos()));
+    }
+
+    /// Updates the lexer's state after parsing operators and punctuators
+    fn set_lexer_newline_state(&mut self) {
+        if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
+            self.lex_state == LexState::EXPR_ARG;
+        } else {
+            self.lex_state == LexState::EXPR_BEG;
+        }
     }
 
     /// Determines whether this character is a valid starting unicode identifier

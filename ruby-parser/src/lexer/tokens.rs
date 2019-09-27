@@ -87,10 +87,10 @@ pub enum Token {
     ThreeDot,      // ...
     OpTernaryIf,   // ?
     OpTernaryElse, // :
-    Arrow,         // =>
+    Arrow,         // => tASSOC
     // 8.7.5 - Operators
     OpNot,      // !
-    OpNotEqual, // !=
+    OpNotEqual, // != tNEQ
     OpNotMatch, // !~ tNMATCH
     OpAnd,      // &&
     OpOr,       // ||
