@@ -108,7 +108,7 @@ pub enum Token {
     OpLt,            // <
     OpLtEqual,       // <= tLEQ
     OpLeftShift,     // <<
-    OpRightShift,    // >>
+    OpRightShift,    // >> tRSHFT
     OpPlus,          // +
     OpMinus,         // -
     OpMultiply,      // *

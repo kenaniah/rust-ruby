@@ -6,11 +6,20 @@ where
     T: Iterator<Item = char>,
 {
     /// This function is used by the iterator implementation to retrieve the next token.
+    ///
+    /// Depending on what type of token is returned, the lexing state may be adjusted.
     pub fn inner_next(&mut self) -> LexResult {
-        while self.pending_tokens.is_empty() {
-            self.produce_token()?;
+        let lex_result = self.produce_token();
+        if let Ok((_, token, _)) = &lex_result {
+            match token {
+                // Assignments should always mark the start of an expression
+                Token::AssignmentOperator { value: _ } => {
+                    self.lex_state = LexState::EXPR_BEG;
+                }
+                _ => {}
+            }
         }
-        Ok(self.pending_tokens.remove(0))
+        lex_result
     }
 
     /// Returns the character at the given index within the lexer's buffer.
@@ -71,7 +80,7 @@ where
     /// # Panics
     ///  * Panics if the number of characters requested is greater than the buffer's size.
     ///  * Panics if the number of characters requested moves past the end of the buffer's input stream.
-    pub fn emit_from_chars(&mut self, token: Token, chars: usize) {
+    pub fn emit_from_chars(&mut self, token: Token, chars: usize) -> LexResult {
         let tok_start = self.get_pos();
         match chars {
             1..=BUFFER_SIZE => {
@@ -81,7 +90,7 @@ where
             }
             _ => panic!("emit_from_chars can only consume up to {} characters at a time", BUFFER_SIZE),
         }
-        self.emit((tok_start, token, self.get_pos()));
+        Ok((tok_start, token, self.get_pos()))
     }
 }
 

@@ -4,8 +4,8 @@
 mod core;
 mod lex_state;
 
-use crate::*;
 use crate::plugins::NewlinesHandler;
+use crate::*;
 
 use lex_state::LexState;
 
@@ -57,13 +57,13 @@ where
     }
 
     /// This function takes a look at the next character, if any, and emits the relevant token
-    fn produce_token(&mut self) -> Result<(), LexicalError> {
+    fn produce_token(&mut self) -> LexResult {
         self.seen_whitespace = false;
 
         while let Some(c) = self.char(0) {
             // TODO: check if we're in a string first
-            // parse.y:4700
-            // parse.y:4713
+            // TODO: parse.y:4573
+            // TODO: parse.y:4586
 
             // Handle whitespace
             if self.is_whitespace(c) {
@@ -75,11 +75,10 @@ where
             match c {
                 '#' => {
                     // found a comment
-                    self.lex_single_line_comment();
-                    break;
+                    return self.lex_single_line_comment();
                 }
                 '\n' => {
-                    // TODO: parse.y:4733
+                    // TODO: parse.y:4606
                     match self.lex_state {
                         LexState::EXPR_BEG
                         | LexState::EXPR_FNAME
@@ -97,18 +96,17 @@ where
                         _ => {}
                     }
                     if !self.parsing_heredoc {
-                        self.emit_from_chars(Token::LineTerminator, 1);
-                        break;
+                        return self.emit_from_chars(Token::LineTerminator, 1);
                     }
                     // TODO: parse.y:4754
                     unimplemented!()
                 }
                 '*' => {
-                    // parse.y:4795
-
+                    // parse.y:4652
+                    self.set_lexer_newline_state();
                     // **=
                     if self.chars(3) == Some("**=".to_owned()) {
-                        self.emit_from_chars(
+                        return self.emit_from_chars(
                             Token::AssignmentOperator {
                                 value: "**=".to_owned(),
                             },
@@ -119,137 +117,123 @@ where
                     else if self.char(1) == Some('*') {
                         if self.is_spcarg(c) {
                             self.warn("'**' interpreted as argument prefix");
-                            self.emit_from_chars(Token::TwoStar, 2);
+                            return self.emit_from_chars(Token::TwoStar, 2)
                         } else if self.is_beg() {
-                            self.emit_from_chars(Token::TwoStar, 2);
+                            return self.emit_from_chars(Token::TwoStar, 2)
                         } else {
-                            self.emit_from_chars(Token::OpExponent, 2);
+                            return self.emit_from_chars(Token::OpExponent, 2)
                         }
                     }
                     // *=
                     else if self.char(1) == Some('=') {
-                        self.emit_from_chars(
+                        return self.emit_from_chars(
                             Token::AssignmentOperator {
                                 value: "*=".to_owned(),
                             },
                             2,
-                        );
+                        )
                     }
                     // *
                     else if self.is_spcarg(c) {
                         self.warn("'*' interpreted as argument prefix");
-                        self.emit_from_chars(Token::Star, 1);
+                        return self.emit_from_chars(Token::Star, 1)
                     } else if self.is_beg() {
-                        self.emit_from_chars(Token::Star, 1);
+                        return self.emit_from_chars(Token::Star, 1)
                     } else {
-                        self.emit_from_chars(Token::OpMultiply, 1);
-                    }
-
-                    // Update the lexer's state
-                    self.set_lexer_newline_state();
-
-                    break;
+                        return self.emit_from_chars(Token::OpMultiply, 1)
+                    };
                 }
                 '!' => {
-                    // parse.y:4840
+                    // parse.y:4697
                     self.set_lexer_newline_state();
                     // !=
                     if self.char(1) == Some('=') {
-                        self.emit_from_chars(Token::OpNotEqual, 2);
-                        break;
+                        return self.emit_from_chars(Token::OpNotEqual, 2);
                     }
                     // !~
                     if self.char(1) == Some('~') {
-                        self.emit_from_chars(Token::OpNotMatch, 2);
-                        break;
+                        return self.emit_from_chars(Token::OpNotMatch, 2);
                     }
                     // !
-                    self.emit_from_chars(Token::OpNot, 1);
-                    break;
+                    return self.emit_from_chars(Token::OpNot, 1);
                 }
                 '=' => {
-                    //  parse.y:4860
-                    // TODO: parse.y:4861 (multi-line comments)
+                    //  parse.y:4717
+                    // TODO: parse.y:4718 (multi-line comments)
                     self.set_lexer_newline_state();
                     // ===
                     if self.chars(3) == Some("===".to_owned()) {
-                        self.emit_from_chars(Token::OpTripleEqual, 3);
+                        return self.emit_from_chars(Token::OpTripleEqual, 3);
                     }
                     // ==
                     else if self.char(1) == Some('=') {
-                        self.emit_from_chars(Token::OpDoubleEqual, 2);;
+                        return self.emit_from_chars(Token::OpDoubleEqual, 2);
                     }
                     // =~
                     else if self.char(1) == Some('~') {
-                        self.emit_from_chars(Token::OpMatch, 2);
+                        return self.emit_from_chars(Token::OpMatch, 2);
                     }
                     // =>
                     else if self.char(1) == Some('>') {
-                        self.emit_from_chars(Token::Arrow, 2);
+                        return self.emit_from_chars(Token::Arrow, 2);
                     }
                     // =
-                    self.emit_from_chars(Token::OpAssign, 1);
-                    break;
+                    return self.emit_from_chars(Token::OpAssign, 1);
                 }
                 '<' => {
-                    // parse.y:4903
+                    // parse.y:4760
                     unimplemented!()
                 }
                 '>' => {
-                    // parse.y:4942
+                    // parse.y:4799
                     self.set_lexer_newline_state();
                     // >=
                     if self.char(1) == Some('=') {
-                        self.emit_from_chars(Token::OpGtEqual, 2);
-                        break;
+                        return self.emit_from_chars(Token::OpGtEqual, 2);
                     }
                     if self.char(1) == Some('>') {
                         // >>=
                         if self.char(2) == Some('=') {
-                            self.emit_from_chars(
+                            return self.emit_from_chars(
                                 Token::AssignmentOperator {
                                     value: ">>=".to_owned(),
                                 },
                                 3,
                             );
-                            break;
                         }
                         // >>
-                        self.emit_from_chars(Token::OpRightShift, 2);
-                        break;
+                        return self.emit_from_chars(Token::OpRightShift, 2);
                     }
-                    self.emit_from_chars(Token::OpGt, 1);
-                    break;
+                    return self.emit_from_chars(Token::OpGt, 1);
                 }
                 '"' => {
-                    // parse.y:4964
+                    // parse.y:4821
                     unimplemented!()
                 }
                 '\'' => {
-                    // parse.y:4968
+                    // parse.y:4825
                     unimplemented!()
                 }
                 '`' => {
-                    // parse.y:4972
+                    // parse.y:4829
                     unimplemented!()
                 }
                 '?' => {
-                    // parse.y:4987
+                    // parse.y:4844
                     unimplemented!()
                 }
                 '&' => {
-                    // parse.y:5058
+                    // parse.y:4912
                     unimplemented!()
                 }
                 '|' => {
-                    // parse.y:5097
+                    // parse.y:4951
                     unimplemented!()
                 }
                 _ => unimplemented!(),
             }
         }
-
-        Ok(())
+        unimplemented!()
     }
 
     /// Consumes non-identifying characters
@@ -391,14 +375,14 @@ where
     }
 
     /// Lexes a single-line comment
-    fn lex_single_line_comment(&mut self) {
+    fn lex_single_line_comment(&mut self) -> LexResult {
         let tok_start = self.get_pos();
         let mut content = String::new();
         self.next_char(); // Discard the '#'
         while self.char(0) != Some('\n') && self.char(0) != None {
             content.push(self.next_char().unwrap());
         }
-        self.emit((tok_start, Token::Comment { value: content }, self.get_pos()));
+        return Ok((tok_start, Token::Comment { value: content }, self.get_pos()));
     }
 
     /// Lexes a multi-line comment
