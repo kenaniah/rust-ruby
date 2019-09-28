@@ -1,5 +1,5 @@
-//! This module defines the struct that will be used by the LALRPOP lexer to track the
-//! start and end location of tokens within the input.
+// This module defines the struct that will be used by the LALRPOP lexer to track the
+// start and end location of tokens within the input.
 
 use std::fmt;
 

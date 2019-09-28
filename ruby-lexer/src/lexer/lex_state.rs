@@ -1,3 +1,5 @@
+use super::Lexer;
+
 bitflags! {
     #[derive(Default)]
     pub struct LexState: u32 {
@@ -19,5 +21,43 @@ bitflags! {
         const EXPR_VALUE        = (Self::EXPR_BEG.bits() | Self::EXPR_MID.bits() | Self::EXPR_CLASS.bits());
         const EXPR_ARG_ANY      = (Self::EXPR_ARG.bits() | Self::EXPR_CMDARG.bits());
         const EXPR_END_ANY      = (Self::EXPR_END.bits() | Self::EXPR_ENDARG.bits() | Self::EXPR_ENDFN.bits());
+    }
+}
+
+impl<T> Lexer<T>
+where
+    T: Iterator<Item = char>,
+{
+    pub fn is_arg(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_ARG | LexState::EXPR_CMDARG => true,
+            _ => false,
+        }
+    }
+    pub fn is_end(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_END | LexState::EXPR_ENDARG | LexState::EXPR_ENDFN => true,
+            _ => false,
+        }
+    }
+    pub fn is_beg(&self) -> bool {
+        match self.lex_state {
+            LexState::EXPR_BEG
+            | LexState::EXPR_MID
+            | LexState::EXPR_VALUE
+            | LexState::EXPR_CLASS => true,
+            _ => false,
+        }
+    }
+    pub fn is_spcarg(&self, c: char) -> bool {
+        self.is_arg() && self.seen_whitespace && !self.is_whitespace(c)
+    }
+    /// Updates the lexer's state after parsing operators and punctuators
+    pub fn set_lexer_newline_state(&mut self) {
+        if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
+            self.lex_state = LexState::EXPR_ARG;
+        } else {
+            self.lex_state = LexState::EXPR_BEG;
+        }
     }
 }

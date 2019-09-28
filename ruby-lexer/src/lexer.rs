@@ -1,30 +1,20 @@
 //! This module handles the lexing of Ruby source code. The input will be translated into a
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
-mod newline_handler;
 
 #[cfg(test)]
 mod tests;
 
-mod error;
 mod lex_state;
-mod location;
-mod tokens;
 
-use self::error::{LexicalError, LexicalErrorType};
-use self::lex_state::LexState;
-use self::location::Location;
-pub use self::tokens::Token;
+use crate::*;
+use crate::plugins::NewlineHandler;
+
+use lex_state::LexState;
+
 use log::trace;
-use newline_handler::NewlineHandler;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
-
-/// Composite type that tracks a token and its starting and ending location
-pub type Spanned = (Location, Token, Location);
-
-/// Type used to track the success of a lexing operation
-pub type LexResult = Result<Spanned, LexicalError>;
 
 /// Holds the lexer's current state
 pub struct Lexer<T: Iterator<Item = char>> {
@@ -270,31 +260,6 @@ where
         Ok(())
     }
 
-    fn is_arg(&self) -> bool {
-        match self.lex_state {
-            LexState::EXPR_ARG | LexState::EXPR_CMDARG => true,
-            _ => false,
-        }
-    }
-    fn is_end(&self) -> bool {
-        match self.lex_state {
-            LexState::EXPR_END | LexState::EXPR_ENDARG | LexState::EXPR_ENDFN => true,
-            _ => false,
-        }
-    }
-    fn is_beg(&self) -> bool {
-        match self.lex_state {
-            LexState::EXPR_BEG
-            | LexState::EXPR_MID
-            | LexState::EXPR_VALUE
-            | LexState::EXPR_CLASS => true,
-            _ => false,
-        }
-    }
-    fn is_spcarg(&self, c: char) -> bool {
-        self.is_arg() && self.seen_whitespace && !self.is_whitespace(c)
-    }
-
     /// Consumes non-identifying characters
     fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
         let tok_start = self.get_pos();
@@ -412,15 +377,6 @@ where
             _ => panic!("emit_from_chars can only consume up to 12 characters at a time"),
         }
         self.emit((tok_start, token, self.get_pos()));
-    }
-
-    /// Updates the lexer's state after parsing operators and punctuators
-    fn set_lexer_newline_state(&mut self) {
-        if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
-            self.lex_state == LexState::EXPR_ARG;
-        } else {
-            self.lex_state == LexState::EXPR_BEG;
-        }
     }
 
     /// Determines whether this character is a valid starting unicode identifier
