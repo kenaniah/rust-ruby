@@ -1,15 +1,15 @@
 //! This module handles the lexing of Ruby source code. The input will be translated into a
 //! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
 
-#[cfg(test)]
-mod tests;
+//#[cfg(test)]
+//mod tests;
 
 mod lex_state;
 
 use crate::*;
 use crate::plugins::NewlineHandler;
 
-pub use lex_state::LexState;
+use lex_state::LexState;
 
 use log::trace;
 use std::collections::HashMap;

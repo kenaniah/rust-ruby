@@ -1,5 +1,11 @@
-// The newline handler is an iterator which collapses different newline
-// types into \n always.
+/// Transparently collapses `\r\n` into `\n` by wrapping a `char` iterator.
+///
+/// # Example
+/// ```
+/// use ruby_lexer::plugins::NewlineHandler;
+/// let nlh = NewlineHandler::new("This is \r\n an \r input \n string.\r\n".chars());
+/// assert_eq!("This is \n an \r input \n string.\n", nlh.collect::<String>());
+/// ```
 pub struct NewlineHandler<T: Iterator<Item = char>> {
     source: T,
     chr0: Option<char>,
@@ -35,8 +41,8 @@ where
 {
     type Item = char;
 
+    /// Collapses \r\n sequences into \n before returning the next character
     fn next(&mut self) -> Option<Self::Item> {
-        // Collapse \r\n into \n
         if self.chr0 == Some('\r') && self.chr1 == Some('\n') {
             self.shift();
         }
