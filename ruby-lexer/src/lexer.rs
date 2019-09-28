@@ -237,54 +237,54 @@ where
     }
 
     /// Consumes non-identifying characters
-    fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
-        let tok_start = self.get_pos();
-        match c {
-            ' ' | '\t' | '\x0b' | '\x0c' | '\r' => {
-                self.lex_whitespace();
-            }
-            '\n' => {
-                self.emit_from_chars(Token::LineTerminator, 1);
-            }
-            '[' => {
-                self.emit_from_chars(Token::LeftBracket, 1);
-            }
-            ']' => {
-                self.emit_from_chars(Token::RightBracket, 1);
-            }
-            '\\' => {
-                if self.char(1) == Some('\n') {
-                    self.lex_whitespace();
-                } else {
-                    panic!("\\ is not handled yet");
-                }
-            }
-            '#' => {
-                self.lex_single_line_comment();
-            }
-            '=' => {
-                // Check for the start of a multi-line comment
-                if self.get_pos().col() == 1 && self.chars(6) == Some("=begin".to_owned()) {
-                    if let Some(char) = self.char(6) {
-                        if self.is_whitespace(char) || char == '\n' {
-                            let comment = self.lex_multi_line_comment()?;
-                            self.emit(comment);
-                            return Ok(());
-                        }
-                    }
-                }
-                panic!("= is not handled yet")
-            }
-            _ => {
-                let c = self.next_char();
-                return Err(LexicalError {
-                    location: tok_start,
-                    error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() },
-                });
-            }
-        }
-        Ok(())
-    }
+    // fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
+    //     let tok_start = self.get_pos();
+    //     match c {
+    //         ' ' | '\t' | '\x0b' | '\x0c' | '\r' => {
+    //             self.lex_whitespace();
+    //         }
+    //         '\n' => {
+    //             self.emit_from_chars(Token::LineTerminator, 1);
+    //         }
+    //         '[' => {
+    //             self.emit_from_chars(Token::LeftBracket, 1);
+    //         }
+    //         ']' => {
+    //             self.emit_from_chars(Token::RightBracket, 1);
+    //         }
+    //         '\\' => {
+    //             if self.char(1) == Some('\n') {
+    //                 self.lex_whitespace();
+    //             } else {
+    //                 panic!("\\ is not handled yet");
+    //             }
+    //         }
+    //         '#' => {
+    //             self.lex_single_line_comment();
+    //         }
+    //         '=' => {
+    //             // Check for the start of a multi-line comment
+    //             if self.get_pos().col() == 1 && self.chars(6) == Some("=begin".to_owned()) {
+    //                 if let Some(char) = self.char(6) {
+    //                     if self.is_whitespace(char) || char == '\n' {
+    //                         let comment = self.lex_multi_line_comment()?;
+    //                         self.emit(comment);
+    //                         return Ok(());
+    //                     }
+    //                 }
+    //             }
+    //             panic!("= is not handled yet")
+    //         }
+    //         _ => {
+    //             let c = self.next_char();
+    //             return Err(LexicalError {
+    //                 location: tok_start,
+    //                 error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() },
+    //             });
+    //         }
+    //     }
+    //     Ok(())
+    // }
 
     /// Determines whether this character is a valid starting unicode identifier
     fn is_identifier_start(&self, c: char) -> bool {
@@ -347,11 +347,11 @@ where
     }
 
     /// Lexes a sequence of whitespace characters and escaped newlines
-    fn lex_whitespace(&mut self) {
+    fn lex_whitespace(&mut self) -> LexResult {
         let tok_start = self.get_pos();
         if self.char(0) == Some('\n') {
             // Consume a line terminator
-            self.emit_from_chars(Token::LineTerminator, 2);
+            self.emit_from_chars(Token::LineTerminator, 2)
         } else {
             // Consume whitespaces
             loop {
@@ -370,7 +370,7 @@ where
                 break;
             }
             let tok_end = self.get_pos();
-            self.emit((tok_start, Token::Whitespace, tok_end))
+            Ok((tok_start, Token::Whitespace, tok_end))
         }
     }
 

@@ -63,18 +63,6 @@ where
         self.location.clone()
     }
 
-    /// Emits a lexed token to the queue of tokens, potentially adjusting the lexing state.
-    pub fn emit(&mut self, spanned: SpannedToken) {
-        match spanned.1 {
-            // Assignments should change the lexing state
-            Token::AssignmentOperator { value: _ } => {
-                self.lex_state = LexState::EXPR_BEG;
-            }
-            _ => {}
-        }
-        self.pending_tokens.push(spanned);
-    }
-
     /// Emits tokens from one or more characters in the buffer.
     ///
     /// # Panics
