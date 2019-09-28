@@ -9,7 +9,7 @@ mod lex_state;
 use crate::*;
 use crate::plugins::NewlineHandler;
 
-use lex_state::LexState;
+pub use lex_state::LexState;
 
 use log::trace;
 use std::collections::HashMap;
