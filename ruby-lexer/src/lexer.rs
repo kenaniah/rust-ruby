@@ -1,6 +1,3 @@
-//! This module handles the lexing of Ruby source code. The input will be translated into a
-//! stream of lexed [`Token`](../tokens/enum.Token.html)s for use in the parser.
-
 //#[cfg(test)]
 //mod tests;
 
