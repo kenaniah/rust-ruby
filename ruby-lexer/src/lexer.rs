@@ -2,6 +2,7 @@
 //mod tests;
 
 mod core;
+mod numbers;
 mod lex_state;
 
 use crate::plugins::NewlinesHandler;
@@ -230,6 +231,38 @@ where
                     // parse.y:4951
                     unimplemented!()
                 }
+                '+' => {
+                    // parse.y:4976
+                    unimplemented!()
+                }
+                '-' => {
+                    // parse.y:5004
+                    unimplemented!()
+                }
+                '.' => {
+                    // parse.y:5035
+                    self.lex_state = LexState::EXPR_BEG;
+                    if self.char(1) == Some('.') {
+                        if self.char(2) == Some('.'){
+                            return self.emit_from_chars(Token::ThreeDot, 3);
+                        }
+                        return self.emit_from_chars(Token::TwoDot, 2);
+                    }
+                    if Self::is_digit(self.char(1), 10) {
+                        return Err(LexicalError {
+                            error: LexicalErrorType::LexingError,
+                            message: "no .<digit> floating literal anymore; put 0 before dot".to_owned(),
+                            location: self.get_pos()
+                        })
+                    }
+
+                    self.lex_state = LexState::EXPR_DOT;
+                    return self.emit_from_chars(Token::Dot, 1);
+                }
+                '0'..='9' => {
+                    // parse.y:5052
+                    return self.lex_number();
+                }
                 _ => unimplemented!(),
             }
         }
@@ -415,8 +448,9 @@ where
                 Some(c) => str.push(c),
                 None => {
                     return Err(LexicalError {
-                        location: self.get_pos(),
                         error: LexicalErrorType::UnterminatedMultilineComment,
+                        message: "Multi-line comment was not terminated before the end of the file".to_owned(),
+                        location: self.get_pos()
                     })
                 }
             }

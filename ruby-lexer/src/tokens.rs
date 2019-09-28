@@ -1,4 +1,4 @@
-use num_bigint::BigInt;
+//use num_bigint::BigInt;
 
 /// Ruby source can be tokenized into a sequence of these tokens
 #[derive(Clone, Debug, PartialEq)]
@@ -123,7 +123,7 @@ pub enum Token {
     // Operator assignment methods
     AssignmentOperator { value: String },
     // 8.7.6 - Literals
-    Integer { value: BigInt },
+    Integer { value: isize },
     Float { value: f64 },
     Complex { real: f64, imag: f64 },
     String { value: String },
@@ -131,6 +131,7 @@ pub enum Token {
     Symbol { value: String },
     // Things that need refactoring down the line
     RefactorIdentifier { value: String },
+    Dot, // .
     Star, // * tSTAR
     TwoStar, // ** tDSTAR
 }
