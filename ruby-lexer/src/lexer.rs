@@ -16,6 +16,9 @@ use std::collections::HashMap;
 use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
 
+/// The number of characters held by the lexer's buffer
+pub const BUFFER_SIZE: usize = 12;
+
 /// Holds the lexer's current state
 pub struct Lexer<T: Iterator<Item = char>> {
     input: T,
@@ -29,9 +32,6 @@ pub struct Lexer<T: Iterator<Item = char>> {
     lex_strterm: bool,
     seen_whitespace: bool,
 }
-
-/// The number of characters held by the lexer's buffer
-pub const BUFFER_SIZE: usize = 32;
 
 impl<T> Lexer<T>
 where
