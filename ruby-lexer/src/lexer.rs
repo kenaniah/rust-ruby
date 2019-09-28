@@ -4,6 +4,7 @@
 //#[cfg(test)]
 //mod tests;
 
+mod core;
 mod lex_state;
 
 use crate::*;
@@ -11,7 +12,6 @@ use crate::plugins::NewlinesHandler;
 
 use lex_state::LexState;
 
-use log::trace;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
@@ -20,7 +20,7 @@ use unicode_xid::UnicodeXID;
 pub struct Lexer<T: Iterator<Item = char>> {
     input: T,
     nesting_level: usize,
-    pending_tokens: Vec<Spanned>,
+    pending_tokens: Vec<SpannedToken>,
     chr: VecDeque<Option<char>>,
     location: Location,
     keywords: HashMap<String, Token>,
@@ -30,17 +30,20 @@ pub struct Lexer<T: Iterator<Item = char>> {
     seen_whitespace: bool,
 }
 
+/// The number of characters held by the lexer's buffer
+pub const BUFFER_SIZE: usize = 32;
+
 impl<T> Lexer<T>
 where
     T: Iterator<Item = char>,
 {
-    /// Initializes a lexer and pre-reads the first 12 characters
+    /// Initializes a lexer and pre-reads the buffered number of characters
     pub fn new(input: T) -> Self {
         let mut lxr = Lexer {
             input: input,
             nesting_level: 0,
             pending_tokens: Vec::new(),
-            chr: VecDeque::with_capacity(12),
+            chr: VecDeque::with_capacity(BUFFER_SIZE),
             location: Location::new(0, 0),
             keywords: get_keywords(),
             lex_state: LexState::EXPR_BEG,
@@ -48,20 +51,12 @@ where
             lex_strterm: false,
             seen_whitespace: false,
         };
-        // Preload the first 12 characters into the lexer
-        for _ in 1..=12 {
+        // Preload the lexer's buffer
+        for _ in 1..=BUFFER_SIZE {
             lxr.chr.push_back(lxr.input.next());
         }
         lxr.location.reset(); // Moves to line 1, col 1
         lxr
-    }
-
-    /// This function is used by the iterator implementation to retrieve the next token
-    fn inner_next(&mut self) -> LexResult {
-        while self.pending_tokens.is_empty() {
-            self.produce_token()?;
-        }
-        Ok(self.pending_tokens.remove(0))
     }
 
     /// This function takes a look at the next character, if any, and emits the relevant token
@@ -310,75 +305,6 @@ where
         Ok(())
     }
 
-    /// Helper function that returns the character at the given index (the lexer keeps 12 characters)
-    fn char(&self, index: usize) -> Option<char> {
-        assert!(index < 12);
-        match self.chr.get(index) {
-            Some(c) => *c,
-            None => None,
-        }
-    }
-
-    /// Helper function that returns the next n number of characters as a string (or None if EOF)
-    fn chars(&self, n: usize) -> Option<String> {
-        let mut str = String::with_capacity(n);
-        for i in 0..n {
-            match self.chr.get(i) {
-                Some(Some(c)) => str.push(*c),
-                _ => return None,
-            }
-        }
-        Some(str)
-    }
-
-    /// Helper function that consumes the next upcoming character
-    /// This method will also adjust the lexer's current location accordingly
-    fn next_char(&mut self) -> Option<char> {
-        // Shift the stack of upcoming characters
-        let c = self.chr.pop_front()?;
-        self.chr.push_back(self.input.next());
-
-        // Update the lexer's source location
-        if c == Some('\n') {
-            self.location.newline();
-        } else if let Some(_) = c {
-            self.location.move_right();
-        }
-        c
-    }
-
-    /// Helper function to retrieve the lexer's current location
-    fn get_pos(&self) -> Location {
-        self.location.clone()
-    }
-
-    /// Helper function to emit a lexed token to the queue of tokens
-    /// This may also adjust the lexing state on certain token types
-    fn emit(&mut self, spanned: Spanned) {
-        match spanned.1 {
-            // Assignments should change the lexing state
-            Token::AssignmentOperator { value: _ } => {
-                self.lex_state = LexState::EXPR_BEG;
-            }
-            _ => {}
-        }
-        self.pending_tokens.push(spanned);
-    }
-
-    /// Helper function to emit tokens from one or more characters
-    fn emit_from_chars(&mut self, token: Token, chars: usize) {
-        let tok_start = self.get_pos();
-        match chars {
-            1..=12 => {
-                for _ in 1..=chars {
-                    self.next_char().unwrap();
-                }
-            }
-            _ => panic!("emit_from_chars can only consume up to 12 characters at a time"),
-        }
-        self.emit((tok_start, token, self.get_pos()));
-    }
-
     /// Determines whether this character is a valid starting unicode identifier
     fn is_identifier_start(&self, c: char) -> bool {
         match c {
@@ -536,21 +462,6 @@ where
 
     fn warn(&self, _msg: &str) {
         // Do something with the string
-    }
-}
-
-impl<T> Iterator for Lexer<T>
-where
-    T: Iterator<Item = char>,
-{
-    type Item = LexResult;
-    fn next(&mut self) -> Option<Self::Item> {
-        let token = self.inner_next();
-        trace!("Lex token {:?}, nesting={:?}", token, self.nesting_level);
-        match token {
-            Ok((_, Token::EndOfFile, _)) => None,
-            r => Some(r),
-        }
     }
 }
 

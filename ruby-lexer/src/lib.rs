@@ -13,7 +13,7 @@ pub use tokens::Token;
 pub use lexer::Lexer;
 
 /// Composite type that tracks a token and its starting and ending location
-pub type Spanned = (Location, Token, Location);
+pub type SpannedToken = (Location, Token, Location);
 
 /// Type used to track the success of a lexing operation
-pub type LexResult = Result<Spanned, LexicalError>;
+pub type LexResult = Result<SpannedToken, LexicalError>;
