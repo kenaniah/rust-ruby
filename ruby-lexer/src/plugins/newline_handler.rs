@@ -1,23 +1,32 @@
 /// Transparently collapses "`\r\n`" into "`\n`" when wrapping a character iterator.
 ///
+/// This iterator standardizes the different line endings used by various platforms. Most notably,
+/// Unix-like systems utilize "`\n`" as their line ending, and Windows sysems utilize "`\r\n`".
+///
+/// The lexer provided by this crate only recognizes the "`\n`" Unix-style line ending, so it is
+/// recommended that input streams are first wrapped by this iterator before being passed to the
+/// lexer.
+///
 /// # Example
 /// ```
-/// use ruby_lexer::plugins::NewlineHandler;
-/// let nlh = NewlineHandler::new("This is \r\n an \r input \n string.\r\n".chars());
-/// assert_eq!("This is \n an \r input \n string.\n", nlh.collect::<String>());
+/// use ruby_lexer::plugins::NewlinesHandler;
+/// let input = "This is \r\n an \r input \n string.\r\n";
+/// let output = "This is \n an \r input \n string.\n";
+/// let iter = NewlinesHandler::new(input.chars());
+/// assert_eq!(output, iter.collect::<String>());
 /// ```
-pub struct NewlineHandler<T: Iterator<Item = char>> {
+pub struct NewlinesHandler<T: Iterator<Item = char>> {
     source: T,
     chr0: Option<char>,
     chr1: Option<char>,
 }
 
-impl<T> NewlineHandler<T>
+impl<T> NewlinesHandler<T>
 where
     T: Iterator<Item = char>,
 {
     pub fn new(source: T) -> Self {
-        let mut nlh = NewlineHandler {
+        let mut nlh = NewlinesHandler {
             source,
             chr0: None,
             chr1: None,
@@ -35,7 +44,7 @@ where
     }
 }
 
-impl<T> Iterator for NewlineHandler<T>
+impl<T> Iterator for NewlinesHandler<T>
 where
     T: Iterator<Item = char>,
 {

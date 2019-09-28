@@ -7,7 +7,7 @@
 mod lex_state;
 
 use crate::*;
-use crate::plugins::NewlineHandler;
+use crate::plugins::NewlinesHandler;
 
 use lex_state::LexState;
 
@@ -555,7 +555,7 @@ where
 }
 
 pub fn make_tokenizer(source: &str) -> impl Iterator<Item = LexResult> + '_ {
-    let nlh = NewlineHandler::new(source.chars());
+    let nlh = NewlinesHandler::new(source.chars());
     Lexer::new(nlh)
 }
 
