@@ -1,4 +1,4 @@
-/// Transparently collapses `\r\n` into `\n` by wrapping a `char` iterator.
+/// Transparently collapses "`\r\n`" into "`\n`" when wrapping a character iterator.
 ///
 /// # Example
 /// ```
