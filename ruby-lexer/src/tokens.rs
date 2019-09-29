@@ -58,7 +58,8 @@ pub enum Token {
     EndOfFile,
     // 8.3 - Line terminators
     Separator,      // ;
-    LineTerminator, // \n or \r\n
+    Newline, // \n or \r\n, syntatically insignificant
+    LineTerminator, // \n or \r\n, syntatically significant
     // 8.4 - Whitespace
     Whitespace, // tab (0x09), vertical tab (0x0b), form feed (0x0c), carriage return (0x0d), space (0x20)
     // 8.5 - Comments

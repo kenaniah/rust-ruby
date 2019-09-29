@@ -15,8 +15,14 @@ where
                 // Assignments should always mark the start of an expression
                 Token::AssignmentOperator { value: _ } => {
                     self.lex_state = LexState::EXPR_BEG;
+                    self.seen_whitespace = false;
                 }
-                _ => {}
+                Token::Whitespace => {
+                    self.seen_whitespace = true;
+                }
+                _ => {
+                    self.seen_whitespace = false;
+                }
             }
         }
         lex_result

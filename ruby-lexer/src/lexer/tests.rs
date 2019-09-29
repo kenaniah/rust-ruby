@@ -1,4 +1,9 @@
 use super::*;
+use log::trace;
+
+// Include the various test suites
+mod comment;
+mod whitespace;
 
 pub fn enable_logging() {
     let _ = env_logger::builder().is_test(true).try_init();
@@ -6,6 +11,7 @@ pub fn enable_logging() {
 
 /// Lexes the source string, returning a vector of tokens or the lexical error encountered
 pub fn lex_source(source: &str) -> Result<Vec<Token>, LexicalError> {
+    trace!("Lexing:\n--------\n{}\n--------", source);
     let mut lexer = make_tokenizer(source);
     let mut tokens: Vec<Token> = Vec::new();
 
@@ -20,7 +26,3 @@ pub fn lex_source(source: &str) -> Result<Vec<Token>, LexicalError> {
     // Return the lexed tokens
     Ok(tokens)
 }
-
-// Include the various test suites
-mod comment;
-mod whitespace;

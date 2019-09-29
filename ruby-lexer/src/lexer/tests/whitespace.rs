@@ -7,9 +7,9 @@ fn whitespace_and_newlines() {
         tokens,
         Ok(vec![
             Token::Whitespace,
-            Token::LineTerminator,
-            Token::LineTerminator,
-            Token::LineTerminator,
+            Token::Newline,
+            Token::Newline,
+            Token::Newline,
             Token::Whitespace
         ])
     );
@@ -17,6 +17,7 @@ fn whitespace_and_newlines() {
 
 #[test]
 fn continued_lines() {
+    enable_logging();
     let tokens = lex_source("foo\\\r\n\\\nbar \\\n baz\n");
     assert_eq!(
         tokens,

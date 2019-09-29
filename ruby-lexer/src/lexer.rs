@@ -1,5 +1,5 @@
-//#[cfg(test)]
-//mod tests;
+#[cfg(test)]
+mod tests;
 
 mod core;
 mod numbers;
@@ -59,7 +59,6 @@ where
 
     /// This function takes a look at the next character, if any, and emits the relevant token
     fn produce_token(&mut self) -> LexResult {
-        self.seen_whitespace = false;
 
         while let Some(c) = self.char(0) {
             // TODO: check if we're in a string first
@@ -68,9 +67,7 @@ where
 
             // Handle whitespace
             if self.is_whitespace(c) {
-                self.seen_whitespace = true;
-                self.next_char();
-                continue;
+                return self.lex_whitespace();
             }
 
             match c {
@@ -83,20 +80,27 @@ where
                     match self.lex_state {
                         LexState::EXPR_BEG
                         | LexState::EXPR_FNAME
-                        | LexState::EXPR_DOT
-                        | LexState::EXPR_CLASS
+                        | LexState::EXPR_DOT => {
+                            if !self.parsing_heredoc && self.lex_strterm {
+                                // self.parse_string();
+                                unimplemented!();
+                                break;
+                            }
+                            // newline is not significant here
+                            return self.emit_from_chars(Token::Newline, 1);
+                        }
+                        LexState::EXPR_CLASS
                         | LexState::EXPR_VALUE => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
                                 unimplemented!();
                                 break;
                             }
-                            self.next_char();
-                            continue;
                         }
                         _ => {}
                     }
                     if !self.parsing_heredoc {
+                        // newline is significant
                         return self.emit_from_chars(Token::LineTerminator, 1);
                     }
                     // TODO: parse.y:4754
@@ -266,7 +270,8 @@ where
                 _ => unimplemented!(),
             }
         }
-        unimplemented!()
+        // End of file
+        Ok((self.get_pos(), Token::EndOfFile, self.get_pos()))
     }
 
     /// Consumes non-identifying characters
@@ -382,29 +387,22 @@ where
     /// Lexes a sequence of whitespace characters and escaped newlines
     fn lex_whitespace(&mut self) -> LexResult {
         let tok_start = self.get_pos();
-        if self.char(0) == Some('\n') {
-            // Consume a line terminator
-            self.emit_from_chars(Token::LineTerminator, 2)
-        } else {
-            // Consume whitespaces
-            loop {
-                if let Some(c) = self.char(0) {
-                    if self.is_whitespace(c) {
-                        // Handle a normal whitespace
-                        self.next_char();
-                        continue;
-                    } else if c == '\\' && self.char(1) == Some('\n') {
-                        // Handle line continuations
-                        self.next_char();
-                        self.next_char();
-                        continue;
-                    }
+        loop {
+            if let Some(c) = self.char(0) {
+                if self.is_whitespace(c) {
+                    // Handle a normal whitespace
+                    self.next_char();
+                    continue;
+                } else if c == '\\' && self.char(1) == Some('\n') {
+                    // Handle line continuations
+                    self.next_char();
+                    self.next_char();
+                    continue;
                 }
-                break;
             }
-            let tok_end = self.get_pos();
-            Ok((tok_start, Token::Whitespace, tok_end))
+            break;
         }
+        Ok((tok_start, Token::Whitespace, self.get_pos()))
     }
 
     /// Lexes a single-line comment

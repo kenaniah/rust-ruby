@@ -28,7 +28,7 @@ fn single_line_comments() {
             Token::Comment {
                 value: " first comment".to_owned()
             },
-            Token::LineTerminator,
+            Token::Newline,
             Token::Comment {
                 value: "second\tcomment".to_owned()
             }
@@ -78,6 +78,6 @@ fn multi_line_comments() {
     let tokens = lex_source("=begin stuff\nblah\n");
     assert_eq!(
         tokens,
-        Err(LexicalError { error: LexicalErrorType::UnterminatedMultilineComment, location: Location { row: 3, col: 1 } })
+        Err(LexicalError { message: "".to_owned(), error: LexicalErrorType::UnterminatedMultilineComment, location: Location { row: 3, col: 1 } })
     );
 }
