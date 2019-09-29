@@ -2,8 +2,9 @@ use super::*;
 use log::trace;
 
 // Include the various test suites
-mod comment;
-mod whitespace;
+//mod comment;
+mod numbers;
+//mod whitespace;
 
 pub fn enable_logging() {
     let _ = env_logger::builder().is_test(true).try_init();

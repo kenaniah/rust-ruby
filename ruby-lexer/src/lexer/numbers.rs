@@ -1,5 +1,6 @@
 use super::{LexResult, LexState, Lexer, LexicalError, LexicalErrorType, Token};
 //use num_bigint::BigInt;
+use log::trace;
 
 impl<T> Lexer<T>
 where
@@ -7,6 +8,7 @@ where
 {
     /// Lexes and returns a numeric token
     pub fn lex_number(&mut self) -> LexResult {
+
         // parse.y:5052
         let mut seen_point = false;
         let mut seen_e = false;
@@ -15,8 +17,11 @@ where
         let start = self.get_pos();
         self.lex_state = LexState::EXPR_ENDARG;
 
+        trace!("Start: lexing number...");
+
         // Check for signed numbers
         if self.char(0) == Some('-') || self.char(0) == Some('+') {
+            trace!("Number has sign: {}", self.char(0).unwrap());
             tok.push(self.next_char().unwrap());
         }
 
@@ -27,7 +32,7 @@ where
             self.next_char();
             if let Some(c) = self.char(0) {
                 non_digit = Some(c);
-                let radix = match c {
+                radix = match c {
                     'x' | 'X' => {
                         self.next_char();
                         16
@@ -54,34 +59,47 @@ where
                         8
                     }
                     '8'..='9' => {
-                        return Err(LexicalError{
+                        return Err(LexicalError {
                             message: "Invalid octal digit".to_owned(),
                             location: self.get_pos(),
-                            error: LexicalErrorType::LexingError
+                            error: LexicalErrorType::LexingError,
                         })
                     }
-                    '.' |  'e' | 'E' => {
+                    '.' | 'e' | 'E' => {
+                        // This is a decimal without a prefix character
+                        non_digit = None;
                         tok.push('0');
                         10
                     }
                     _ => {
                         // Only character seen was a zero
+                        trace!("End: found zero");
                         return Ok((start, Token::Integer { value: 0 }, self.get_pos()));
                     }
                 };
+            } else {
+                // End of input
+                trace!("End: found zero");
+                return Ok((start, Token::Integer { value: 0 }, self.get_pos()));
             }
         }
 
+        trace!("Radix is: {}", radix);
+
         // TODO: 5192 and beyond
         while let Some(c) = self.char(0) {
+            trace!("Next char is: '{}'", c);
+            trace!("non_digit is currently: {:?}", non_digit);
             // Handle digits
             if c.is_digit(radix) {
+                trace!("Found digit: {}", c);
                 tok.push(self.next_char().unwrap());
                 non_digit = None;
                 continue;
             }
             // Ignore underscores
             if c == '_' {
+                trace!("Found underscore");
                 if non_digit != None {
                     break;
                 }
@@ -90,6 +108,7 @@ where
             }
             // Handle points in decimal
             if radix == 10 && c == '.' && Self::is_digit(self.char(1), 10) {
+                trace!("Found decimal point");
                 if seen_point || seen_e || non_digit != None {
                     break;
                 }
@@ -99,16 +118,21 @@ where
             }
             // Handle scientific notation in decimal
             if radix == 10 && (c == 'e' || c == 'E') {
+                trace!("Testing for E notation...");
                 if seen_e || non_digit != None {
                     break;
                 }
                 non_digit = self.char(0);
                 if Self::is_digit(self.char(1), 10) {
+                    trace!("  - found digit after E");
                     seen_e = true;
                     tok.push(self.next_char().unwrap());
                     continue;
                 }
-                if (self.char(1) == Some('+') || self.char(1) == Some('-')) && Self::is_digit(self.char(2), 10) {
+                if (self.char(1) == Some('+') || self.char(1) == Some('-'))
+                    && Self::is_digit(self.char(2), 10)
+                {
+                    trace!("   - found signed digit after E");
                     seen_e = true;
                     tok.push(self.next_char().unwrap());
                     tok.push(self.next_char().unwrap());
@@ -116,6 +140,7 @@ where
                 }
             }
             // Anything else is not part of the number
+            trace!("End: lexing number... non_digit is: {:?}", non_digit);
             break;
         }
 
@@ -124,9 +149,11 @@ where
             return Err(LexicalError {
                 message: format!("trailing '{}' in number", c),
                 location: self.get_pos(),
-                error: LexicalErrorType::LexingError
+                error: LexicalErrorType::LexingError,
             });
         }
+
+        trace!("Lexed number contains: {:?}", tok);
 
         // Return a parsed token
         if seen_e || seen_point {
@@ -134,9 +161,8 @@ where
             return Ok((start, Token::Float { value: value }, self.get_pos()));
         } else {
             let value = tok.parse::<isize>().unwrap(); // TODO: handle fails
-            return Ok((start, Token::Integer { value: value}, self.get_pos()));
+            return Ok((start, Token::Integer { value: value }, self.get_pos()));
         }
-
     }
 
     /// Wraps char#is_digit

@@ -13,6 +13,7 @@ use lex_state::LexState;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
+use env_logger;
 
 /// The number of characters held by the lexer's buffer
 pub const BUFFER_SIZE: usize = 12;
@@ -37,6 +38,7 @@ where
 {
     /// Initializes a lexer and pre-reads the buffered number of characters
     pub fn new(input: T) -> Self {
+        let _ = env_logger::builder().is_test(true).try_init();
         let mut lxr = Lexer {
             input: input,
             nesting_level: 0,
