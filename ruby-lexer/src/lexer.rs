@@ -13,7 +13,7 @@ use crate::*;
 use lex_state::LexState;
 
 use env_logger;
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::collections::VecDeque;
 
 /// The number of characters held by the lexer's buffer
@@ -23,10 +23,9 @@ pub const BUFFER_SIZE: usize = 12;
 pub struct Lexer<T: Iterator<Item = char>> {
     input: T,
     nesting_level: usize,
-    pending_tokens: Vec<SpannedToken>,
     chr: VecDeque<Option<char>>,
     location: Location,
-    keywords: HashMap<String, Token>,
+    //keywords: HashMap<String, Token>,
     lex_state: LexState,
     parsing_heredoc: bool,
     lex_strterm: bool,
@@ -43,10 +42,9 @@ where
         let mut lxr = Lexer {
             input: input,
             nesting_level: 0,
-            pending_tokens: Vec::new(),
             chr: VecDeque::with_capacity(BUFFER_SIZE),
             location: Location::new(0, 0),
-            keywords: get_keywords(),
+            //keywords: get_keywords(),
             lex_state: LexState::EXPR_BEG,
             parsing_heredoc: false,
             lex_strterm: false,
@@ -520,48 +518,48 @@ pub fn make_tokenizer(source: &str) -> impl Iterator<Item = LexResult> + '_ {
 }
 
 // 8.7.2 - Keywords (alphanumerically)
-pub fn get_keywords() -> HashMap<String, Token> {
-    let mut keywords: HashMap<String, Token> = HashMap::new();
-    keywords.insert(String::from("__LINE__"), Token::KwLINE);
-    keywords.insert(String::from("__ENCODING__"), Token::KwENCODING);
-    keywords.insert(String::from("__FILE__"), Token::KwFILE);
-    keywords.insert(String::from("BEGIN"), Token::KwBEGIN);
-    keywords.insert(String::from("END"), Token::KwEND);
-    keywords.insert(String::from("alias"), Token::KwAlias);
-    keywords.insert(String::from("and"), Token::KwAnd);
-    keywords.insert(String::from("begin"), Token::KwBegin);
-    keywords.insert(String::from("break"), Token::KwBreak);
-    keywords.insert(String::from("case"), Token::KwCase);
-    keywords.insert(String::from("class"), Token::KwClass);
-    keywords.insert(String::from("def"), Token::KwDef);
-    keywords.insert(String::from("defined?"), Token::KwDefined);
-    keywords.insert(String::from("do"), Token::KwDo);
-    keywords.insert(String::from("else"), Token::KwElse);
-    keywords.insert(String::from("elsif"), Token::KwElsif);
-    keywords.insert(String::from("end"), Token::KwEnd);
-    keywords.insert(String::from("ensure"), Token::KwEnsure);
-    keywords.insert(String::from("for"), Token::KwFor);
-    keywords.insert(String::from("false"), Token::KwFalse);
-    keywords.insert(String::from("if"), Token::KwIf);
-    keywords.insert(String::from("in"), Token::KwIn);
-    keywords.insert(String::from("module"), Token::KwModule);
-    keywords.insert(String::from("next"), Token::KwNext);
-    keywords.insert(String::from("nil"), Token::KwNil);
-    keywords.insert(String::from("not"), Token::KwNot);
-    keywords.insert(String::from("or"), Token::KwOr);
-    keywords.insert(String::from("redo"), Token::KwRedo);
-    keywords.insert(String::from("rescue"), Token::KwRescue);
-    keywords.insert(String::from("retry"), Token::KwRetry);
-    keywords.insert(String::from("return"), Token::KwReturn);
-    keywords.insert(String::from("self"), Token::KwSelf);
-    keywords.insert(String::from("super"), Token::KwSuper);
-    keywords.insert(String::from("then"), Token::KwThen);
-    keywords.insert(String::from("true"), Token::KwTrue);
-    keywords.insert(String::from("undef"), Token::KwUndef);
-    keywords.insert(String::from("unless"), Token::KwUnless);
-    keywords.insert(String::from("until"), Token::KwUntil);
-    keywords.insert(String::from("when"), Token::KwWhen);
-    keywords.insert(String::from("while"), Token::KwWhile);
-    keywords.insert(String::from("yield"), Token::KwYield);
-    keywords
-}
+// pub fn get_keywords() -> HashMap<String, Token> {
+//     let mut keywords: HashMap<String, Token> = HashMap::new();
+//     keywords.insert(String::from("__LINE__"), Token::KwLINE);
+//     keywords.insert(String::from("__ENCODING__"), Token::KwENCODING);
+//     keywords.insert(String::from("__FILE__"), Token::KwFILE);
+//     keywords.insert(String::from("BEGIN"), Token::KwBEGIN);
+//     keywords.insert(String::from("END"), Token::KwEND);
+//     keywords.insert(String::from("alias"), Token::KwAlias);
+//     keywords.insert(String::from("and"), Token::KwAnd);
+//     keywords.insert(String::from("begin"), Token::KwBegin);
+//     keywords.insert(String::from("break"), Token::KwBreak);
+//     keywords.insert(String::from("case"), Token::KwCase);
+//     keywords.insert(String::from("class"), Token::KwClass);
+//     keywords.insert(String::from("def"), Token::KwDef);
+//     keywords.insert(String::from("defined?"), Token::KwDefined);
+//     keywords.insert(String::from("do"), Token::KwDo);
+//     keywords.insert(String::from("else"), Token::KwElse);
+//     keywords.insert(String::from("elsif"), Token::KwElsif);
+//     keywords.insert(String::from("end"), Token::KwEnd);
+//     keywords.insert(String::from("ensure"), Token::KwEnsure);
+//     keywords.insert(String::from("for"), Token::KwFor);
+//     keywords.insert(String::from("false"), Token::KwFalse);
+//     keywords.insert(String::from("if"), Token::KwIf);
+//     keywords.insert(String::from("in"), Token::KwIn);
+//     keywords.insert(String::from("module"), Token::KwModule);
+//     keywords.insert(String::from("next"), Token::KwNext);
+//     keywords.insert(String::from("nil"), Token::KwNil);
+//     keywords.insert(String::from("not"), Token::KwNot);
+//     keywords.insert(String::from("or"), Token::KwOr);
+//     keywords.insert(String::from("redo"), Token::KwRedo);
+//     keywords.insert(String::from("rescue"), Token::KwRescue);
+//     keywords.insert(String::from("retry"), Token::KwRetry);
+//     keywords.insert(String::from("return"), Token::KwReturn);
+//     keywords.insert(String::from("self"), Token::KwSelf);
+//     keywords.insert(String::from("super"), Token::KwSuper);
+//     keywords.insert(String::from("then"), Token::KwThen);
+//     keywords.insert(String::from("true"), Token::KwTrue);
+//     keywords.insert(String::from("undef"), Token::KwUndef);
+//     keywords.insert(String::from("unless"), Token::KwUnless);
+//     keywords.insert(String::from("until"), Token::KwUntil);
+//     keywords.insert(String::from("when"), Token::KwWhen);
+//     keywords.insert(String::from("while"), Token::KwWhile);
+//     keywords.insert(String::from("yield"), Token::KwYield);
+//     keywords
+// }
