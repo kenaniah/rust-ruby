@@ -8,7 +8,7 @@ where
     /// This function is used by the iterator implementation to retrieve the next token.
     ///
     /// Depending on what type of token is returned, the lexing state may be adjusted.
-    pub fn inner_next(&mut self) -> LexResult {
+    pub fn emit_token(&mut self) -> LexResult {
         let lex_result = self.produce_token();
         if let Ok((_, token, _)) = &lex_result {
             match token {
@@ -95,7 +95,7 @@ where
     type Item = LexResult;
     /// Produces a `LexResult` unless the end of the file was reached
     fn next(&mut self) -> Option<Self::Item> {
-        let token = self.inner_next();
+        let token = self.emit_token();
         trace!("Lex token {:?}, nesting={:?}", token, self.nesting_level);
         match token {
             Ok((_, Token::EndOfFile, _)) => None,

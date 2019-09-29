@@ -2,18 +2,18 @@
 mod tests;
 
 mod core;
-mod numbers;
 mod lex_state;
+mod numbers;
 
 use crate::plugins::NewlinesHandler;
 use crate::*;
 
 use lex_state::LexState;
 
+use env_logger;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use unicode_xid::UnicodeXID;
-use env_logger;
 
 /// The number of characters held by the lexer's buffer
 pub const BUFFER_SIZE: usize = 12;
@@ -61,7 +61,6 @@ where
 
     /// This function takes a look at the next character, if any, and emits the relevant token
     fn produce_token(&mut self) -> LexResult {
-
         while let Some(c) = self.char(0) {
             // TODO: check if we're in a string first
             // TODO: parse.y:4573
@@ -80,9 +79,7 @@ where
                 '\n' => {
                     // TODO: parse.y:4606
                     match self.lex_state {
-                        LexState::EXPR_BEG
-                        | LexState::EXPR_FNAME
-                        | LexState::EXPR_DOT => {
+                        LexState::EXPR_BEG | LexState::EXPR_FNAME | LexState::EXPR_DOT => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
                                 unimplemented!();
@@ -91,8 +88,7 @@ where
                             // newline is not significant here
                             return self.emit_from_chars(Token::Newline, 1);
                         }
-                        LexState::EXPR_CLASS
-                        | LexState::EXPR_VALUE => {
+                        LexState::EXPR_CLASS | LexState::EXPR_VALUE => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
                                 unimplemented!();
@@ -124,11 +120,11 @@ where
                     else if self.char(1) == Some('*') {
                         if self.is_spcarg(c) {
                             self.warn("'**' interpreted as argument prefix");
-                            return self.emit_from_chars(Token::TwoStar, 2)
+                            return self.emit_from_chars(Token::TwoStar, 2);
                         } else if self.is_beg() {
-                            return self.emit_from_chars(Token::TwoStar, 2)
+                            return self.emit_from_chars(Token::TwoStar, 2);
                         } else {
-                            return self.emit_from_chars(Token::OpExponent, 2)
+                            return self.emit_from_chars(Token::OpExponent, 2);
                         }
                     }
                     // *=
@@ -138,16 +134,16 @@ where
                                 value: "*=".to_owned(),
                             },
                             2,
-                        )
+                        );
                     }
                     // *
                     else if self.is_spcarg(c) {
                         self.warn("'*' interpreted as argument prefix");
-                        return self.emit_from_chars(Token::Star, 1)
+                        return self.emit_from_chars(Token::Star, 1);
                     } else if self.is_beg() {
-                        return self.emit_from_chars(Token::Star, 1)
+                        return self.emit_from_chars(Token::Star, 1);
                     } else {
-                        return self.emit_from_chars(Token::OpMultiply, 1)
+                        return self.emit_from_chars(Token::OpMultiply, 1);
                     };
                 }
                 '!' => {
@@ -255,7 +251,7 @@ where
                     // parse.y:5035
                     self.lex_state = LexState::EXPR_BEG;
                     if self.char(1) == Some('.') {
-                        if self.char(2) == Some('.'){
+                        if self.char(2) == Some('.') {
                             return self.emit_from_chars(Token::ThreeDot, 3);
                         }
                         return self.emit_from_chars(Token::TwoDot, 2);
@@ -263,9 +259,10 @@ where
                     if Self::is_digit(self.char(1), 10) {
                         return Err(LexicalError {
                             error: LexicalErrorType::LexingError,
-                            message: "no .<digit> floating literal anymore; put 0 before dot".to_owned(),
-                            location: self.get_pos()
-                        })
+                            message: "no .<digit> floating literal anymore; put 0 before dot"
+                                .to_owned(),
+                            location: self.get_pos(),
+                        });
                     }
 
                     self.lex_state = LexState::EXPR_DOT;
@@ -275,7 +272,85 @@ where
                     // parse.y:5052
                     return self.lex_number();
                 }
-                _ => unimplemented!(),
+                ')' | ']' | '}' => {
+                    // TODO: parse.y:5284
+                    self.nesting_level -= 1;
+                    self.lex_state = if c == ')' {
+                        LexState::EXPR_ENDFN
+                    } else {
+                        LexState::EXPR_END
+                    };
+                    let token = match c {
+                        ')' => Token::RightParen,
+                        ']' => Token::RightBracket,
+                        '}' => Token::RightBrace,
+                        _ => unimplemented!()
+                    };
+                    return self.emit_from_chars(token, 1);
+                }
+                ':' => {
+                    // TODO: parse.y:5297
+                    unimplemented!()
+                }
+                '/' => {
+                    // TODO: parse.y:5321
+                    unimplemented!()
+                }
+                '^' => {
+                    // TODO: parse.y:5344
+                    unimplemented!()
+                }
+                ';' => {
+                    // parse.y:5359
+                    self.lex_state = LexState::EXPR_BEG;
+                    return self.emit_from_chars(Token::Semicolon, 1);
+                }
+                ',' => {
+                    // parse.y:5359
+                    self.lex_state = LexState::EXPR_BEG;
+                    return self.emit_from_chars(Token::Comma, 1);
+                }
+                '~' => {
+                    // parse.y:5367
+                    self.set_lexer_newline_state();
+                    return self.emit_from_chars(Token::OpBinComplement, 1);
+                }
+                '(' => {
+                    // TODO: parse.y:5379
+                    unimplemented!()
+                }
+                '[' => {
+                    // TODO: parse.y:5395
+                    unimplemented!()
+                }
+                '{' => {
+                    // TODO: parse.y:5420
+                    unimplemented!()
+                }
+                '\\' => {
+                    // parse.y:5440
+                    if self.char(1) == Some('\n') {
+                        return self.lex_whitespace();
+                    }
+                    return self.emit_from_chars(Token::Backslash, 1);
+                }
+                '%' => {
+                    // TODO: parse.y:5451
+                    unimplemented!()
+                }
+                '$' => {
+                    // TODO: parse.y:5539
+                    unimplemented!()
+                }
+                _ => {
+                    // TODO: parse.y:5679
+                    if self.get_pos().col() == 1 && self.chars(7) == Some("__END__".to_owned()) {
+                        if self.char(7) == Some('\n') || self.char(7) == None {
+                            return self.emit_from_chars(Token::EndOfProgramMarker, 7);
+                        }
+                    }
+                    unimplemented!()
+                }
             }
         }
         // End of file
@@ -455,8 +530,9 @@ where
                 None => {
                     return Err(LexicalError {
                         error: LexicalErrorType::UnterminatedMultilineComment,
-                        message: "Multi-line comment was not terminated before the end of the file".to_owned(),
-                        location: self.get_pos()
+                        message: "Multi-line comment was not terminated before the end of the file"
+                            .to_owned(),
+                        location: self.get_pos(),
                     })
                 }
             }

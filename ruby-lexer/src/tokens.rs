@@ -132,7 +132,9 @@ pub enum Token {
     Symbol { value: String },
     // Things that need refactoring down the line
     RefactorIdentifier { value: String },
+    // Character tokens
     Dot, // .
     Star, // * tSTAR
     TwoStar, // ** tDSTAR
+    Backslash, // \
 }
