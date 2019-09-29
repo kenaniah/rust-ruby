@@ -160,7 +160,7 @@ where
             let value = tok.parse::<f64>().unwrap(); // TODO: handle fails
             return Ok((start, Token::Float { value: value }, self.get_pos()));
         } else {
-            let value = tok.parse::<isize>().unwrap(); // TODO: handle fails
+            let value = isize::from_str_radix(&tok, radix).unwrap(); // TODO: handle fails
             return Ok((start, Token::Integer { value: value }, self.get_pos()));
         }
     }

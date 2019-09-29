@@ -238,11 +238,17 @@ where
                     unimplemented!()
                 }
                 '+' => {
-                    // parse.y:4976
+                    // TODO: parse.y:4976
+                    if Self::is_digit(self.char(1), 10) {
+                        return self.lex_number();
+                    }
                     unimplemented!()
                 }
                 '-' => {
                     // parse.y:5004
+                    if Self::is_digit(self.char(1), 10) {
+                        return self.lex_number();
+                    }
                     unimplemented!()
                 }
                 '.' => {
