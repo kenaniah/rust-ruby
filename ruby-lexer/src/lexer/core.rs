@@ -1,4 +1,4 @@
-use super::{BUFFER_SIZE, LexResult, LexState, Lexer, Location, SpannedToken, Token};
+use super::{BUFFER_SIZE, LexResult, LexState, Lexer, Location, Token};
 use log::trace;
 
 impl<T> Lexer<T>

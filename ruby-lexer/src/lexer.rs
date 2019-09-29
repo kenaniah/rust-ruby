@@ -2,8 +2,10 @@
 mod tests;
 
 mod core;
+mod identifiers;
 mod lex_state;
 mod numbers;
+mod whitespace;
 
 use crate::plugins::NewlinesHandler;
 use crate::*;
@@ -13,7 +15,6 @@ use lex_state::LexState;
 use env_logger;
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use unicode_xid::UnicodeXID;
 
 /// The number of characters held by the lexer's buffer
 pub const BUFFER_SIZE: usize = 12;
@@ -67,7 +68,7 @@ where
             // TODO: parse.y:4586
 
             // Handle whitespace
-            if self.is_whitespace(c) {
+            if Self::is_whitespace(c) {
                 return self.lex_whitespace();
             }
 
@@ -407,86 +408,37 @@ where
     //     Ok(())
     // }
 
-    /// Determines whether this character is a valid starting unicode identifier
-    fn is_identifier_start(&self, c: char) -> bool {
-        match c {
-            '_' => true,
-            c => UnicodeXID::is_xid_start(c),
-        }
-    }
-
-    /// Determines whether the character is the continuation of a valid unicode identifier
-    fn is_identifier_continuation(&mut self) -> bool {
-        if let Some(c) = self.char(0) {
-            match c {
-                '_' | '0'..='9' => true,
-                c => UnicodeXID::is_xid_continue(c),
-            }
-        } else {
-            false
-        }
-    }
-
     /// Lexes a named identifier
-    fn lex_identifier(&mut self) -> LexResult {
-        let mut name = String::new();
-        let start_pos = self.get_pos();
-
-        // Take the first character
-        name.push(self.next_char().unwrap());
-
-        // Check for more identifier characters
-        while self.is_identifier_continuation() {
-            name.push(self.next_char().unwrap());
-        }
-
-        // Check for an ending ? or ! (valid for method names)
-        if self.char(0) == Some('?') || self.char(0) == Some('!') {
-            name.push(self.next_char().unwrap());
-        }
-
-        let end_pos = self.get_pos();
-
-        // Emit the token
-        if self.keywords.contains_key(&name) {
-            Ok((start_pos, self.keywords[&name].clone(), end_pos))
-        } else {
-            Ok((
-                start_pos,
-                Token::RefactorIdentifier { value: name },
-                end_pos,
-            ))
-        }
-    }
-
-    /// Helper function to determine if a character is whitespace (not including newline)
-    fn is_whitespace(&self, c: char) -> bool {
-        match c {
-            ' ' | '\t' | '\x0b' | '\x0c' | '\r' => true,
-            _ => false,
-        }
-    }
-
-    /// Lexes a sequence of whitespace characters and escaped newlines
-    fn lex_whitespace(&mut self) -> LexResult {
-        let tok_start = self.get_pos();
-        loop {
-            if let Some(c) = self.char(0) {
-                if self.is_whitespace(c) {
-                    // Handle a normal whitespace
-                    self.next_char();
-                    continue;
-                } else if c == '\\' && self.char(1) == Some('\n') {
-                    // Handle line continuations
-                    self.next_char();
-                    self.next_char();
-                    continue;
-                }
-            }
-            break;
-        }
-        Ok((tok_start, Token::Whitespace, self.get_pos()))
-    }
+    // fn lex_identifier(&mut self) -> LexResult {
+    //     let mut name = String::new();
+    //     let start_pos = self.get_pos();
+    //
+    //     // Take the first character
+    //     name.push(self.next_char().unwrap());
+    //
+    //     // Check for more identifier characters
+    //     while self.is_identifier_continuation() {
+    //         name.push(self.next_char().unwrap());
+    //     }
+    //
+    //     // Check for an ending ? or ! (valid for method names)
+    //     if self.char(0) == Some('?') || self.char(0) == Some('!') {
+    //         name.push(self.next_char().unwrap());
+    //     }
+    //
+    //     let end_pos = self.get_pos();
+    //
+    //     // Emit the token
+    //     if self.keywords.contains_key(&name) {
+    //         Ok((start_pos, self.keywords[&name].clone(), end_pos))
+    //     } else {
+    //         Ok((
+    //             start_pos,
+    //             Token::RefactorIdentifier { value: name },
+    //             end_pos,
+    //         ))
+    //     }
+    // }
 
     /// Lexes a single-line comment
     fn lex_single_line_comment(&mut self) -> LexResult {
@@ -514,7 +466,7 @@ where
             // Check for the end of the multi-line comment and break if found
             if self.get_pos().col() == 1 && self.chars(4) == Some("=end".to_owned()) {
                 if let Some(char) = self.char(4) {
-                    if self.is_whitespace(char) || char == '\n' {
+                    if Self::is_whitespace(char) || char == '\n' {
                         // Discard the '=end '
                         for _ in 1..=5 {
                             self.next_char();

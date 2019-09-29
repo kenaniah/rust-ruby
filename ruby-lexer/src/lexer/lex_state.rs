@@ -50,7 +50,7 @@ where
         }
     }
     pub fn is_spcarg(&self, c: char) -> bool {
-        self.is_arg() && self.seen_whitespace && !self.is_whitespace(c)
+        self.is_arg() && self.seen_whitespace && !Self::is_whitespace(c)
     }
     /// Updates the lexer's state after parsing operators and punctuators
     pub fn set_lexer_newline_state(&mut self) {
