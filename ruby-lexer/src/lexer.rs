@@ -341,6 +341,10 @@ where
                     // TODO: parse.y:5539
                     unimplemented!()
                 }
+                '@' => {
+                    // TODO: parse.y:5633
+                    unimplemented!()
+                }
                 _ => {
                     // TODO: parse.y:5679
                     if self.get_pos().col() == 1 && self.chars(7) == Some("__END__".to_owned()) {
@@ -348,95 +352,13 @@ where
                             return self.emit_from_chars(Token::EndOfProgramMarker, 7);
                         }
                     }
-                    unimplemented!()
+                    return self.lex_identifier();
                 }
             }
         }
         // End of file
         Ok((self.get_pos(), Token::EndOfFile, self.get_pos()))
     }
-
-    /// Consumes non-identifying characters
-    // fn consume_non_identifier(&mut self, c: char) -> Result<(), LexicalError> {
-    //     let tok_start = self.get_pos();
-    //     match c {
-    //         ' ' | '\t' | '\x0b' | '\x0c' | '\r' => {
-    //             self.lex_whitespace();
-    //         }
-    //         '\n' => {
-    //             self.emit_from_chars(Token::LineTerminator, 1);
-    //         }
-    //         '[' => {
-    //             self.emit_from_chars(Token::LeftBracket, 1);
-    //         }
-    //         ']' => {
-    //             self.emit_from_chars(Token::RightBracket, 1);
-    //         }
-    //         '\\' => {
-    //             if self.char(1) == Some('\n') {
-    //                 self.lex_whitespace();
-    //             } else {
-    //                 panic!("\\ is not handled yet");
-    //             }
-    //         }
-    //         '#' => {
-    //             self.lex_single_line_comment();
-    //         }
-    //         '=' => {
-    //             // Check for the start of a multi-line comment
-    //             if self.get_pos().col() == 1 && self.chars(6) == Some("=begin".to_owned()) {
-    //                 if let Some(char) = self.char(6) {
-    //                     if self.is_whitespace(char) || char == '\n' {
-    //                         let comment = self.lex_multi_line_comment()?;
-    //                         self.emit(comment);
-    //                         return Ok(());
-    //                     }
-    //                 }
-    //             }
-    //             panic!("= is not handled yet")
-    //         }
-    //         _ => {
-    //             let c = self.next_char();
-    //             return Err(LexicalError {
-    //                 location: tok_start,
-    //                 error: LexicalErrorType::UnrecognizedToken { token: c.unwrap() },
-    //             });
-    //         }
-    //     }
-    //     Ok(())
-    // }
-
-    /// Lexes a named identifier
-    // fn lex_identifier(&mut self) -> LexResult {
-    //     let mut name = String::new();
-    //     let start_pos = self.get_pos();
-    //
-    //     // Take the first character
-    //     name.push(self.next_char().unwrap());
-    //
-    //     // Check for more identifier characters
-    //     while self.is_identifier_continuation() {
-    //         name.push(self.next_char().unwrap());
-    //     }
-    //
-    //     // Check for an ending ? or ! (valid for method names)
-    //     if self.char(0) == Some('?') || self.char(0) == Some('!') {
-    //         name.push(self.next_char().unwrap());
-    //     }
-    //
-    //     let end_pos = self.get_pos();
-    //
-    //     // Emit the token
-    //     if self.keywords.contains_key(&name) {
-    //         Ok((start_pos, self.keywords[&name].clone(), end_pos))
-    //     } else {
-    //         Ok((
-    //             start_pos,
-    //             Token::RefactorIdentifier { value: name },
-    //             end_pos,
-    //         ))
-    //     }
-    // }
 
     /// Lexes a single-line comment
     fn lex_single_line_comment(&mut self) -> LexResult {
