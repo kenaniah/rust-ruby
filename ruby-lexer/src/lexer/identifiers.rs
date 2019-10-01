@@ -13,7 +13,7 @@ where
     }
 
     /// Lexes and returns an identifier or language keyword
-    pub fn lex_identifier(&mut self) -> LexResult {
+    pub fn lex_identifier(&mut self, prefix: String) -> LexResult {
 
         unimplemented!()
     }

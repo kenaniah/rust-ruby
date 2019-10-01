@@ -133,6 +133,7 @@ pub enum Token {
     // Things that need refactoring down the line
     RefactorIdentifier { value: String },
     // Character tokens
+    At, // @
     Dot, // .
     Star, // * tSTAR
     TwoStar, // ** tDSTAR

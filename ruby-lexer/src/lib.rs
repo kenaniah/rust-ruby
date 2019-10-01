@@ -27,7 +27,7 @@ mod location;
 pub mod plugins;
 mod tokens;
 
-pub use error::{LexicalError, LexicalErrorType};
+pub use error::LexicalError;
 pub use location::Location;
 pub use tokens::Token;
 pub use lexer::Lexer;

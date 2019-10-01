@@ -257,7 +257,6 @@ where
                     }
                     if Self::is_digit(self.char(1), 10) {
                         return Err(LexicalError {
-                            error: LexicalErrorType::LexingError,
                             message: "no .<digit> floating literal anymore; put 0 before dot"
                                 .to_owned(),
                             location: self.get_pos(),
@@ -283,7 +282,7 @@ where
                         ')' => Token::RightParen,
                         ']' => Token::RightBracket,
                         '}' => Token::RightBrace,
-                        _ => unimplemented!()
+                        _ => unimplemented!(),
                     };
                     return self.emit_from_chars(token, 1);
                 }
@@ -342,8 +341,42 @@ where
                     unimplemented!()
                 }
                 '@' => {
-                    // TODO: parse.y:5633
-                    unimplemented!()
+                    // parse.y:5633
+                    let mut idx = 1;
+                    if self.char(1) == Some('@') {
+                        idx = 2;
+                    }
+                    match self.char(idx) {
+                        None => {
+                            let message = if idx == 1 {
+                                "incomplete instance variable syntax"
+                            } else {
+                                "incomplete class variable syntax"
+                            };
+                            return Err(LexicalError {
+                                message: message.to_owned(),
+                                location: self.get_pos(),
+                            });
+                        }
+                        Some(c @ '0'..='9') => {
+                            let message = if idx == 1 {
+                                format!("'@{}' is not allowed as an instance variable name", c)
+                            } else {
+                                format!("'@@{}' is not allowed as a class variable name", c)
+                            };
+                            return Err(LexicalError {
+                                message: message.to_owned(),
+                                location: self.get_pos(),
+                            });
+                        }
+                        Some(c) => {
+                            if Self::is_identchar(c) {
+                                let prefix = if idx == 1 { "@" } else { "@@" };
+                                return self.lex_identifier(prefix.to_owned());
+                            }
+                            return self.emit_from_chars(Token::At, 1);
+                        }
+                    }
                 }
                 _ => {
                     // TODO: parse.y:5679
@@ -352,7 +385,7 @@ where
                             return self.emit_from_chars(Token::EndOfProgramMarker, 7);
                         }
                     }
-                    return self.lex_identifier();
+                    return self.lex_identifier("".to_owned());
                 }
             }
         }
@@ -401,7 +434,6 @@ where
                 Some(c) => str.push(c),
                 None => {
                     return Err(LexicalError {
-                        error: LexicalErrorType::UnterminatedMultilineComment,
                         message: "Multi-line comment was not terminated before the end of the file"
                             .to_owned(),
                         location: self.get_pos(),

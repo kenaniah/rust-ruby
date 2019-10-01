@@ -1,4 +1,4 @@
-use super::{LexResult, LexState, Lexer, LexicalError, LexicalErrorType, Token};
+use super::{LexResult, LexState, Lexer, LexicalError, Token};
 //use num_bigint::BigInt;
 use log::trace;
 
@@ -61,8 +61,7 @@ where
                     '8'..='9' => {
                         return Err(LexicalError {
                             message: "Invalid octal digit".to_owned(),
-                            location: self.get_pos(),
-                            error: LexicalErrorType::LexingError,
+                            location: self.get_pos()
                         })
                     }
                     '.' | 'e' | 'E' => {
@@ -148,8 +147,7 @@ where
         if let Some(c) = non_digit {
             return Err(LexicalError {
                 message: format!("trailing '{}' in number", c),
-                location: self.get_pos(),
-                error: LexicalErrorType::LexingError,
+                location: self.get_pos()
             });
         }
 
