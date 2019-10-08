@@ -67,12 +67,20 @@ pub enum Token {
     // 8.6 - End of program markers
     EndOfProgramMarker, // __END__
     // 8.7.3 - Identifiers
-    Identifier { value: String },         // tIDENTIFIER
-    GlobalVariable { value: String },     // tGVAR
-    ClassVariable { value: String },      // tCVAR
-    InstanceVariable { value: String },   // tIVAR
-    Constant { value: String },           // tCONSTANT
-    FunctionIdentifier { value: String }, // tFID
+    /// **Original Grammar:** `tIDENTIFIER`
+    Identifier { value: String },
+    /// **Original Grammar:** `tGVAR`
+    GlobalVariable { value: String },
+    /// **Original Grammar:** `tCVAR`
+    ClassVariable { value: String },
+    /// **Original Grammar:** `tIVAR`
+    InstanceVariable { value: String },
+    /// **Original Grammar:** `tCONSTANT`
+    Constant { value: String },
+    /// **Original Grammar:** `tFID`
+    FunctionIdentifier { value: String },
+    /// **Original Grammar:** `tLABEL_TAG`
+    LabelTag { value: String },
     AssignmentLikeMethodIdentifier { value: String },
     // 8.7.4 - Punctuators
     LeftBracket,   // [
@@ -124,8 +132,10 @@ pub enum Token {
     // Operator assignment methods
     AssignmentOperator { value: String },
     // 8.7.6 - Literals
-    Integer { value: isize }, // tINTEGER
-    Float { value: f64 }, // tFLOAT
+    /// **Original Grammar:** `tINTEGER`
+    Integer { value: isize },
+    /// **Original Grammar:** `tFLOAT`
+    Float { value: f64 },
     /// **Original Grammar:** `tCHAR`
     ///
     /// Represents the `?<char>` character literal notation that can be used to build single character strings.
@@ -138,10 +148,26 @@ pub enum Token {
     /// * `?\M-\C-x` - Control + Meta + `x`
     ///
     /// See [Ruby's string literal syntax](https://github.com/ruby/ruby/blob/trunk/doc/syntax/literals.rdoc#strings) for more info.
-    Char { value: String }, // tCHAR
+    Char { value: String },
     Complex { real: f64, imag: f64 },
+    /// **Original Grammar:** `tXSTRING`
+    ///
+    /// Represents a backtick string (which captures the result of a subshell). Backtick strings come in two forms:
+    /// * `` `backtick string` ``
+    /// * `%{backtick string}`
+    XString { value: String },
+    /// **Original Grammar:** `tSTRING`
     String { value: String },
+    /// **Original Grammar:** `tSTRING_PART`
+    StringPart { value: String },
+    /// **Original Grammar:** `tSTRING_MID`
+    StringMid { value: String },
+    /// **Original Grammar:** `tREGEXP`
     Regex { value: String },
+    /// **Original Grammar:** `tNTH_REF`
+    RegexNthRef { value: String },
+    /// **Original Grammar:** `tBACK_REF`
+    RegexBackRef { value: String },
     Symbol { value: String },
     // Things that need refactoring down the line
     RefactorIdentifier { value: String },
