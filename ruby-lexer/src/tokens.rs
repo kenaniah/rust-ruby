@@ -18,9 +18,9 @@ pub enum Token {
     KwDef,
     KwDefined, // defined?
     KwDo,
-    KwDoForCondition, // from ruby's parse.y
-    KwDoForBlock,     // from ruby's parse.y
-    KwDoForLambda,    // from ruby's parse.y
+    KwDoForCondition, // keyword_do_cond
+    KwDoForBlock,     // keyword_do_block
+    KwDoForLambda,    // keyword_do_LAMBDA
     KwElse,
     KwElsif,
     KwEnd,
@@ -28,7 +28,7 @@ pub enum Token {
     KwFor,
     KwFalse,
     KwIf,
-    KwIfModifier, // from ruby's parse.y
+    KwIfModifier, // modifier_if
     KwIn,
     KwModule,
     KwNext,
@@ -37,7 +37,7 @@ pub enum Token {
     KwOr,
     KwRedo,
     KwRescue,
-    KwRescueModifier, // from ruby's parse.y
+    KwRescueModifier, // modifier_rescue
     KwRetry,
     KwReturn,
     KwSelf,
@@ -46,19 +46,19 @@ pub enum Token {
     KwTrue,
     KwUndef,
     KwUnless,
-    KwUnlessModifier, // from ruby's parse.y
+    KwUnlessModifier, // modifier_unless
     KwUntil,
-    KwUntilModifier, // from ruby's parse.y
+    KwUntilModifier, // modifier_until
     KwWhen,
     KwWhile,
-    KwWhileModifier, // from ruby's parse.y
+    KwWhileModifier, // modifier_while
     KwYield,
     // Other tokens (for now)
     // 8.1 - Input elements
     EndOfFile,
     // 8.3 - Line terminators
     Separator,      // ;
-    Newline, // \n or \r\n, syntatically insignificant
+    Newline,        // \n or \r\n, syntatically insignificant
     LineTerminator, // \n or \r\n, syntatically significant
     // 8.4 - Whitespace
     Whitespace, // tab (0x09), vertical tab (0x0b), form feed (0x0c), carriage return (0x0d), space (0x20)
@@ -67,13 +67,13 @@ pub enum Token {
     // 8.6 - End of program markers
     EndOfProgramMarker, // __END__
     // 8.7.3 - Identifiers
-    LocalVariableIdentifier,
-    GlobalVariableIdentifier, // tGVAR
-    ClassVariableIdentifier, // tCVAR
-    InstanceVariableIdentifier, // tIVAR
-    ConstantIdentifier,
-    MethodOnlyIdentifier,
-    AssignmentLikeMethodIdentifier,
+    Identifier { value: String },         // tIDENTIFIER
+    GlobalVariable { value: String },     // tGVAR
+    ClassVariable { value: String },      // tCVAR
+    InstanceVariable { value: String },   // tIVAR
+    Constant { value: String },           // tCONSTANT
+    FunctionIdentifier { value: String }, // tFID
+    AssignmentLikeMethodIdentifier { value: String },
     // 8.7.4 - Punctuators
     LeftBracket,   // [
     RightBracket,  // ]
@@ -124,8 +124,21 @@ pub enum Token {
     // Operator assignment methods
     AssignmentOperator { value: String },
     // 8.7.6 - Literals
-    Integer { value: isize },
-    Float { value: f64 },
+    Integer { value: isize }, // tINTEGER
+    Float { value: f64 }, // tFLOAT
+    /// **Original Grammar:** `tCHAR`
+    ///
+    /// Represents the `?<char>` character literal notation that can be used to build single character strings.
+    /// Valid forms include:
+    /// * `?x` - where `x` represents any unescaped ASCII character or any valid character escape sequence
+    /// * `?cx` - Control + `x`
+    /// * `?\C-x` - Control + `x`
+    /// * `?\M-x` - Meta + `x`
+    /// * `?\C-\M-x` - Control + Meta + `x`
+    /// * `?\M-\C-x` - Control + Meta + `x`
+    ///
+    /// See [Ruby's string literal syntax](https://github.com/ruby/ruby/blob/trunk/doc/syntax/literals.rdoc#strings) for more info.
+    Char { value: String }, // tCHAR
     Complex { real: f64, imag: f64 },
     String { value: String },
     Regex { value: String },
@@ -133,9 +146,9 @@ pub enum Token {
     // Things that need refactoring down the line
     RefactorIdentifier { value: String },
     // Character tokens
-    At, // @
-    Dot, // .
-    Star, // * tSTAR
-    TwoStar, // ** tDSTAR
+    At,        // @
+    Dot,       // .
+    Star,      // * tSTAR
+    TwoStar,   // ** tDSTAR
     Backslash, // \
 }
