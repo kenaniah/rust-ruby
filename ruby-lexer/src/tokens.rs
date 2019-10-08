@@ -107,41 +107,81 @@ pub enum Token {
     RightParen,    // )
     LeftBrace,     // {
     RightBrace,    // }
-    DoubleColon,   // ::
+    /// ### Original Grammar: `tCOLON2`
+    /// **Characters:** `::`
+    DoubleColon,
+    /// ### Original Grammar: `tCOLON3`
+    /// **Characters:** `::`
+    ///
+    /// This token is similar to `tCOLON2`, but is returned when the parser is at the beginning of an expression.
+    DoubleColonPrefix,
     Comma,         // ,
     Semicolon,     // ;
-    TwoDot,        // ..
-    ThreeDot,      // ...
+    /// ### Original Grammar: `tDOT2`
+    /// **Characters:** `..`
+    TwoDot,
+    /// ### Original Grammar: `tDOT3`
+    /// **Characters:** `...`
+    ThreeDot,
     OpTernaryIf,   // ?
     OpTernaryElse, // :
     Arrow,         // => tASSOC
     // 8.7.5 - Operators
     OpNot,      // !
-    OpNotEqual, // != tNEQ
-    OpNotMatch, // !~ tNMATCH
-    OpAnd,      // &&
-    OpOr,       // ||
+    /// ### Original Grammar: `tNEQ`
+    /// **Operator:** `!=`
+    OpNotEqual,
+    /// ### Original Grammar: `tNMATCH`
+    /// **Operator:** `!~`
+    OpNotMatch,
+    /// ### Original Grammar: `tANDOP`
+    /// **Operator:** `&&`
+    OpAnd,
+    /// ### Original Grammar: `tOROP`
+    /// **Operator:** `||`
+    OpOr,
     OpAssign,   // =
     // Operator methods
     OpBinXor,        // ^
     OpBinAnd,        // &
     OpBinOr,         // |
-    OpCompare,       // <=> tCMP
-    OpDoubleEqual,   // == tEQ
-    OpTripleEqual,   // === tEQQ
-    OpMatch,         // =~ tMATCH
+    /// ### Original Grammar: `tCMP`
+    /// **Operator:** `<=>`
+    OpCompare,
+    /// ### Original Grammar: `tEQ`
+    /// **Operator:** `==`
+    OpDoubleEqual,
+    /// ### Original Grammar: `tEQQ`
+    /// **Operator:** `===`
+    OpTripleEqual,
+    /// ### Original Grammar: `tMATCH`
+    /// **Operator:** `=~`
+    OpMatch,
     OpGt,            // >
-    OpGtEqual,       // >= tGEQ
+    /// ### Original Grammar: `tGEQ`
+    /// **Operator:** `>=`
+    OpGtEqual,
     OpLt,            // <
-    OpLtEqual,       // <= tLEQ
-    OpLeftShift,     // <<
-    OpRightShift,    // >> tRSHFT
+    /// ### Original Grammar: `tLEQ`
+    /// **Operator:** `<=`
+    OpLtEqual,
+    /// ### Original Grammar: `tLSHIFT`
+    /// **Operator:** `<<`
+    OpLeftShift,
+    /// ### Original Grammar: `tRSHIFT`
+    /// **Operator:** `>>`
+    OpRightShift,
     OpPlus,          // +
     OpMinus,         // -
     OpMultiply,      // *
     OpDivide,        // /
     OpModulus,       // %
-    OpExponent,      // ** tPOW
+    /// ### Original Grammar: `tPOW`
+    /// **Operator:** `**`
+    ///
+    /// This token defines the exponentiation operator, which is differentiated from the argument
+    /// prefix token (`tDSTAR`).
+    OpExponent,
     OpBinComplement, // ~
     /// ### Original Grammar: `tUPLUS`
     /// **Operator:** `+@`
@@ -155,7 +195,8 @@ pub enum Token {
     /// ### Original Grammar: `tASET`
     /// **Operator:** `[]=`
     OpElementSet,
-    // Operator assignment methods
+    /// ### Original Grammar: `tOP_ASGN`
+    /// This token represents an assignment operator
     AssignmentOperator {
         value: String,
     },
@@ -230,6 +271,11 @@ pub enum Token {
     At,        // @
     Dot,       // .
     Star,      // * tSTAR
-    TwoStar,   // ** tDSTAR
+    /// ### Original Grammar: `tDSTAR`
+    /// **Characters:** `**`
+    ///
+    /// Represents `**` when used as an argument prefix. This is differentiated from the `tPOW` token,
+    /// which is used as the exponentiation operator.
+    TwoStar,
     Backslash, // \
 }
