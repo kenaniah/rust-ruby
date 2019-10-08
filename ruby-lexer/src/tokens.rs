@@ -69,31 +69,31 @@ pub enum Token {
     // 8.6 - End of program markers
     EndOfProgramMarker, // __END__
     // 8.7.3 - Identifiers
-    /// **Original Grammar:** `tIDENTIFIER`
+    /// ### Original Grammar: `tIDENTIFIER`
     Identifier {
         value: String,
     },
-    /// **Original Grammar:** `tGVAR`
+    /// ### Original Grammar: `tGVAR`
     GlobalVariable {
         value: String,
     },
-    /// **Original Grammar:** `tCVAR`
+    /// ### Original Grammar: `tCVAR`
     ClassVariable {
         value: String,
     },
-    /// **Original Grammar:** `tIVAR`
+    /// ### Original Grammar: `tIVAR`
     InstanceVariable {
         value: String,
     },
-    /// **Original Grammar:** `tCONSTANT`
+    /// ### Original Grammar: `tCONSTANT`
     Constant {
         value: String,
     },
-    /// **Original Grammar:** `tFID`
+    /// ### Original Grammar: `tFID`
     FunctionIdentifier {
         value: String,
     },
-    /// **Original Grammar:** `tLABEL_TAG`
+    /// ### Original Grammar: `tLABEL_TAG`
     LabelTag {
         value: String,
     },
@@ -143,24 +143,32 @@ pub enum Token {
     OpModulus,       // %
     OpExponent,      // ** tPOW
     OpBinComplement, // ~
-    OpUnaryPlus,     // +@
-    OpUnaryMinus,    // -@
-    OpElementGet,    // []
-    OpElementSet,    // []=
+    /// ### Original Grammar: `tUPLUS`
+    /// **Operator:** `+@`
+    OpUnaryPlus,
+    /// ### Original Grammar: `tMINUS`
+    /// **Operator:** `-@`
+    OpUnaryMinus,
+    /// ### Original Grammar: `tAREF`
+    /// **Operator:** `[]`
+    OpElementGet,
+    /// ### Original Grammar: `tASET`
+    /// **Operator:** `[]=`
+    OpElementSet,
     // Operator assignment methods
     AssignmentOperator {
         value: String,
     },
     // 8.7.6 - Literals
-    /// **Original Grammar:** `tINTEGER`
+    /// ### Original Grammar: `tINTEGER`
     Integer {
         value: isize,
     },
-    /// **Original Grammar:** `tFLOAT`
+    /// ### Original Grammar: `tFLOAT`
     Float {
         value: f64,
     },
-    /// **Original Grammar:** `tCHAR`
+    /// ### Original Grammar: `tCHAR`
     ///
     /// Represents the `?<char>` character literal notation that can be used to build single character strings.
     /// Valid forms include:
@@ -179,7 +187,7 @@ pub enum Token {
         real: f64,
         imag: f64,
     },
-    /// **Original Grammar:** `tXSTRING`
+    /// ### Original Grammar: `tXSTRING`
     ///
     /// Represents a backtick string (which captures the result of a subshell). Backtick strings come in two forms:
     /// * `` `backtick string` ``
@@ -187,27 +195,27 @@ pub enum Token {
     XString {
         value: String,
     },
-    /// **Original Grammar:** `tSTRING`
+    /// ### Original Grammar: `tSTRING`
     String {
         value: String,
     },
-    /// **Original Grammar:** `tSTRING_PART`
+    /// ### Original Grammar: `tSTRING_PART`
     StringPart {
         value: String,
     },
-    /// **Original Grammar:** `tSTRING_MID`
+    /// ### Original Grammar: `tSTRING_MID`
     StringMid {
         value: String,
     },
-    /// **Original Grammar:** `tREGEXP`
+    /// ### Original Grammar: `tREGEXP`
     Regex {
         value: String,
     },
-    /// **Original Grammar:** `tNTH_REF`
+    /// ### Original Grammar: `tNTH_REF`
     RegexNthRef {
         value: String,
     },
-    /// **Original Grammar:** `tBACK_REF`
+    /// ### Original Grammar: `tBACK_REF`
     RegexBackRef {
         value: String,
     },
