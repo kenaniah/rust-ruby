@@ -101,12 +101,30 @@ pub enum Token {
         value: String,
     },
     // 8.7.4 - Punctuators
-    LeftBracket,   // [
-    RightBracket,  // ]
-    LeftParen,     // (
-    RightParen,    // )
-    LeftBrace,     // {
-    RightBrace,    // }
+    /// ### Original Grammar: `tLBRACK`
+    /// **Characters:** `[`
+    LeftBracket,
+    /// ### Original Grammar: _None_
+    /// **Characters:** `]`
+    RightBracket,
+    /// ### Original Grammar: `tLPAREN`
+    /// **Characters:** `(`
+    LeftParen,
+    /// ### Original Grammar: `tLPAREN_ARG`
+    /// **Characters:** `(`
+    LeftParenArg,
+    /// ### Original Grammar: `tRPAREN`
+    /// **Characters:** `)`
+    RightParen,
+    /// ### Original Grammar: `tLBRACE`
+    /// **Characters:** `{`
+    LeftBrace,
+    /// ### Original Grammar: `tLBRACE_ARG`
+    /// **Characters:** `{`
+    LeftBraceArg,
+    /// ### Original Grammar: _None_
+    /// **Characters:** `}`
+    RightBrace,
     /// ### Original Grammar: `tCOLON2`
     /// **Characters:** `::`
     DoubleColon,
@@ -261,10 +279,6 @@ pub enum Token {
         value: String,
     },
     Symbol {
-        value: String,
-    },
-    // Things that need refactoring down the line
-    RefactorIdentifier {
         value: String,
     },
     // Character tokens
