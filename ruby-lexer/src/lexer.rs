@@ -26,10 +26,14 @@ pub struct Lexer<T: Iterator<Item = char>> {
     chr: VecDeque<Option<char>>,
     location: Location,
     //keywords: HashMap<String, Token>,
+    prev_lex_state: LexState,
     lex_state: LexState,
     parsing_heredoc: bool,
     lex_strterm: bool,
     seen_whitespace: bool,
+    /// Tracks whether the previous token was considered the start of a command
+    prev_command_state: bool,
+    /// Tracks whether the upcoming token may be considered the start of a command
     command_state: bool,
 }
 
@@ -46,10 +50,12 @@ where
             chr: VecDeque::with_capacity(BUFFER_SIZE),
             location: Location::new(0, 0),
             //keywords: get_keywords(),
+            prev_lex_state: LexState::EXPR_BEG,
             lex_state: LexState::EXPR_BEG,
             parsing_heredoc: false,
             lex_strterm: false,
             seen_whitespace: false,
+            prev_command_state: false,
             command_state: false,
         };
         // Preload the lexer's buffer
@@ -62,7 +68,10 @@ where
 
     /// This function takes a look at the next character, if any, and emits the relevant token
     fn produce_token(&mut self) -> LexResult {
+        self.prev_command_state = self.command_state;
+        self.command_state = false;
         while let Some(c) = self.char(0) {
+            self.prev_lex_state = self.lex_state;
             // TODO: check if we're in a string first
             // TODO: parse.y:4573
             // TODO: parse.y:4586

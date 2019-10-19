@@ -53,7 +53,7 @@ where
         self.is_arg() && self.seen_whitespace && !Self::is_whitespace(c)
     }
     pub fn is_label_possible(&self) -> bool {
-        (self.lex_state == LexState::EXPR_BEG && !self.command_state) || self.is_arg()
+        (self.lex_state == LexState::EXPR_BEG && !self.prev_command_state) || self.is_arg()
     }
     pub fn is_label_suffix(&self, i: usize) -> bool {
         self.char(i) == Some(':') || self.char(i + 1) != Some(':')

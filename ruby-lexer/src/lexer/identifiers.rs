@@ -95,6 +95,20 @@ where
                         // TODO: parse.y:5749
                         unimplemented!()
                     }
+                    // Update the lexer's state
+                    self.lex_state =
+                        if self.is_beg() || self.lex_state == LexState::EXPR_DOT || self.is_arg() {
+                            if self.prev_command_state {
+                                LexState::EXPR_CMDARG
+                            } else {
+                                LexState::EXPR_ARG
+                            }
+                        } else if self.lex_state == LexState::EXPR_FNAME {
+                            LexState::EXPR_ENDFN
+                        } else {
+                            LexState::EXPR_END
+                        };
+                    // TODO: parse.y:5807
                     result
                 }
             }
