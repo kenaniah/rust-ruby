@@ -30,6 +30,7 @@ pub struct Lexer<T: Iterator<Item = char>> {
     parsing_heredoc: bool,
     lex_strterm: bool,
     seen_whitespace: bool,
+    command_state: bool,
 }
 
 impl<T> Lexer<T>
@@ -49,6 +50,7 @@ where
             parsing_heredoc: false,
             lex_strterm: false,
             seen_whitespace: false,
+            command_state: false,
         };
         // Preload the lexer's buffer
         for _ in 1..=BUFFER_SIZE {
@@ -380,11 +382,6 @@ where
                 }
                 _ => {
                     // TODO: parse.y:5679
-                    if self.get_pos().col() == 1 && self.chars(7) == Some("__END__".to_owned()) {
-                        if self.char(7) == Some('\n') || self.char(7) == None {
-                            return self.emit_from_chars(Token::EndOfProgramMarker, 7);
-                        }
-                    }
                     return self.lex_identifier("".to_owned());
                 }
             }

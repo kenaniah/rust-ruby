@@ -8,7 +8,7 @@ enum IdentifierType {
     MethodOnly,
     AssignmentLike,
     Constant,
-    Local,
+    Identifier,
 }
 
 impl<T> Lexer<T>
@@ -22,10 +22,17 @@ where
         c.is_ascii_alphanumeric() || c == '_' || !c.is_ascii()
     }
 
-    /// Lexes and returns an identifier or language keyword
+    /// Lexes and returns an identifier or a language keyword
     pub fn lex_identifier(&mut self, prefix: String) -> LexResult {
-        // Consume any prefix characters (@, @@, $)
+        // Check for the program end token followed by a newline or EOF
         let start_pos = self.get_pos();
+        if prefix == "" && start_pos.col() == 1 && self.chars(7) == Some("__END__".to_owned()) {
+            if self.char(7) == Some('\n') || self.char(7) == None {
+                return self.emit_from_chars(Token::EndOfProgramMarker, 7);
+            }
+        }
+
+        // Consume any prefix characters (@, @@, $)
         let mut ident = prefix;
         for _ in 0..ident.chars().count() {
             self.next_char();
@@ -61,7 +68,7 @@ where
                 if method_only {
                     IdentifierType::MethodOnly
                 } else {
-                    if self.lex_state == LexState::EXPR_FNAME
+                    let result = if self.lex_state == LexState::EXPR_FNAME
                         && self.char(0) == Some('=')
                         && self.char(1) != Some('~')
                         && self.char(1) != Some('>')
@@ -72,8 +79,23 @@ where
                     } else if ident.chars().nth(0).unwrap().is_ascii_uppercase() {
                         IdentifierType::Constant
                     } else {
-                        IdentifierType::Local
+                        IdentifierType::Identifier
+                    };
+                    // Check for a label
+                    if self.is_label_possible() && self.is_label_suffix(0) {
+                        self.lex_state = LexState::EXPR_END;
+                        return Ok((
+                            start_pos,
+                            Token::Identifier { value: ident },
+                            self.get_pos(),
+                        ));
                     }
+                    // Check for a keyword
+                    if self.lex_state != LexState::EXPR_DOT {
+                        // TODO: parse.y:5749
+                        unimplemented!()
+                    }
+                    result
                 }
             }
         };

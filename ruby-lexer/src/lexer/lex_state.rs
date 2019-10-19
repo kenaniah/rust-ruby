@@ -52,6 +52,12 @@ where
     pub fn is_spcarg(&self, c: char) -> bool {
         self.is_arg() && self.seen_whitespace && !Self::is_whitespace(c)
     }
+    pub fn is_label_possible(&self) -> bool {
+        (self.lex_state == LexState::EXPR_BEG && !self.command_state) || self.is_arg()
+    }
+    pub fn is_label_suffix(&self, i: usize) -> bool {
+        self.char(i) == Some(':') || self.char(i + 1) != Some(':')
+    }
     /// Updates the lexer's state after parsing operators and punctuators
     pub fn set_lexer_newline_state(&mut self) {
         if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
