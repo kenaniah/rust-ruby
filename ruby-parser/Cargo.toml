@@ -4,14 +4,14 @@ version = "0.1.0"
 authors = ["Kenaniah Cerny <kenaniah@gmail.com>"]
 edition = "2018"
 
-[build-dependencies]
-lalrpop = "0.17.2"
+#[build-dependencies]
+#lalrpop = "0.17.2"
 
 [dependencies]
 bitflags = "1.1.0"
 env_logger = "0.6.2"
-num-bigint = "0.2.3"
-lalrpop-util = "0.17.2"
+#num-bigint = "0.2.3"
+#lalrpop-util = "0.17.2"
 log = "0.4"
-regex = "0.2.1"
-unicode-xid = "0.2.0"
+#regex = "0.2.1"
+#unicode-xid = "0.2.0"

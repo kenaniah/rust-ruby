@@ -92,7 +92,7 @@ where
                         LexState::EXPR_BEG | LexState::EXPR_FNAME | LexState::EXPR_DOT => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
-                                unimplemented!();
+                                todo!();
                                 break;
                             }
                             // newline is not significant here
@@ -101,7 +101,7 @@ where
                         LexState::EXPR_CLASS | LexState::EXPR_VALUE => {
                             if !self.parsing_heredoc && self.lex_strterm {
                                 // self.parse_string();
-                                unimplemented!();
+                                todo!();
                                 break;
                             }
                         }
@@ -112,7 +112,7 @@ where
                         return self.emit_from_chars(Token::LineTerminator, 1);
                     }
                     // TODO: parse.y:4754
-                    unimplemented!()
+                    todo!()
                 }
                 '*' => {
                     // parse.y:4652
@@ -195,7 +195,7 @@ where
                 }
                 '<' => {
                     // parse.y:4760
-                    unimplemented!()
+                    todo!()
                 }
                 '>' => {
                     // parse.y:4799
@@ -221,41 +221,41 @@ where
                 }
                 '"' => {
                     // parse.y:4821
-                    unimplemented!()
+                    todo!()
                 }
                 '\'' => {
                     // parse.y:4825
-                    unimplemented!()
+                    todo!()
                 }
                 '`' => {
                     // parse.y:4829
-                    unimplemented!()
+                    todo!()
                 }
                 '?' => {
                     // parse.y:4844
-                    unimplemented!()
+                    todo!()
                 }
                 '&' => {
                     // parse.y:4912
-                    unimplemented!()
+                    todo!()
                 }
                 '|' => {
                     // parse.y:4951
-                    unimplemented!()
+                    todo!()
                 }
                 '+' => {
                     // TODO: parse.y:4976
                     if Self::is_digit(self.char(1), 10) {
                         return self.lex_number();
                     }
-                    unimplemented!()
+                    todo!()
                 }
                 '-' => {
                     // parse.y:5004
                     if Self::is_digit(self.char(1), 10) {
                         return self.lex_number();
                     }
-                    unimplemented!()
+                    todo!()
                 }
                 '.' => {
                     // parse.y:5035
@@ -293,21 +293,21 @@ where
                         ')' => Token::RightParen,
                         ']' => Token::RightBracket,
                         '}' => Token::RightBrace,
-                        _ => unimplemented!(),
+                        _ => todo!(),
                     };
                     return self.emit_from_chars(token, 1);
                 }
                 ':' => {
                     // TODO: parse.y:5297
-                    unimplemented!()
+                    todo!()
                 }
                 '/' => {
                     // TODO: parse.y:5321
-                    unimplemented!()
+                    todo!()
                 }
                 '^' => {
                     // TODO: parse.y:5344
-                    unimplemented!()
+                    todo!()
                 }
                 ';' => {
                     // parse.y:5359
@@ -326,15 +326,15 @@ where
                 }
                 '(' => {
                     // TODO: parse.y:5379
-                    unimplemented!()
+                    todo!()
                 }
                 '[' => {
                     // TODO: parse.y:5395
-                    unimplemented!()
+                    todo!()
                 }
                 '{' => {
                     // TODO: parse.y:5420
-                    unimplemented!()
+                    todo!()
                 }
                 '\\' => {
                     // parse.y:5440
@@ -345,11 +345,11 @@ where
                 }
                 '%' => {
                     // TODO: parse.y:5451
-                    unimplemented!()
+                    todo!()
                 }
                 '$' => {
                     // TODO: parse.y:5539
-                    unimplemented!()
+                    todo!()
                 }
                 '@' => {
                     // parse.y:5633

@@ -93,7 +93,7 @@ where
                     // Check for a keyword
                     if self.lex_state != LexState::EXPR_DOT {
                         // TODO: parse.y:5749
-                        unimplemented!()
+                        todo!()
                     }
                     // Update the lexer's state
                     self.lex_state =
@@ -116,7 +116,7 @@ where
 
         // parse.y:5679
 
-        unimplemented!()
+        todo!()
     }
 
     // Lexes a named identifier
