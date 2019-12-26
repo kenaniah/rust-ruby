@@ -22,18 +22,18 @@ fn continued_lines() {
     assert_eq!(
         tokens,
         Ok(vec![
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "foo".to_owned()
             },
             Token::Whitespace,
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "bar".to_owned()
             },
             Token::Whitespace,
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "baz".to_owned()
             },
-            Token::LineTerminator
+            Token::Newline
         ])
     );
 }
@@ -41,5 +41,5 @@ fn continued_lines() {
 #[test]
 fn continued_line_only() {
     let tokens = lex_source("\\\n\n");
-    assert_eq!(tokens, Ok(vec![Token::Whitespace, Token::LineTerminator]));
+    assert_eq!(tokens, Ok(vec![Token::Whitespace, Token::Newline]));
 }

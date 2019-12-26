@@ -1,5 +1,4 @@
 use super::{LexResult, Lexer, Token};
-use log::trace;
 
 impl<T> Lexer<T>
 where

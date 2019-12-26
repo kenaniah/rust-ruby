@@ -40,14 +40,14 @@ fn single_line_comments() {
     assert_eq!(
         tokens,
         Ok(vec![
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "foo".to_owned()
             },
             Token::Comment {
                 value: " first comment".to_owned()
             },
             Token::LineTerminator,
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "bar".to_owned()
             },
             Token::Whitespace,
@@ -70,7 +70,7 @@ fn multi_line_comments() {
                 value: "foo bar\nblah\nbaz".to_owned()
             },
             Token::LineTerminator,
-            Token::RefactorIdentifier {
+            Token::Identifier {
                 value: "meh".to_owned()
             }
         ])
@@ -78,6 +78,6 @@ fn multi_line_comments() {
     let tokens = lex_source("=begin stuff\nblah\n");
     assert_eq!(
         tokens,
-        Err(LexicalError { message: "".to_owned(), error: LexicalErrorType::UnterminatedMultilineComment, location: Location { row: 3, col: 1 } })
+        Err(LexicalError { message: "".to_owned(), location: Location { line: 3, col: 1 } })
     );
 }
