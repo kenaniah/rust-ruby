@@ -1,3 +1,6 @@
 [submodule "vendor/ruby"]
 	path = vendor/ruby
 	url = https://github.com/ruby/ruby.git
+[submodule "vendor/mruby"]
+	path = vendor/mruby
+	url = https://github.com/mruby/mruby.git
