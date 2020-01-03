@@ -1,4 +1,4 @@
-use crate::{RubyMemoryPool, RubyState, Symbol};
+use crate::{RClass, RubyMemoryPool, RubyState, Symbol};
 
 #[cfg(feature = "stdio")]
 use std::fs::File;
@@ -87,11 +87,17 @@ pub struct CompileContext<'a> {
     // mrb_sym *syms;
     symbols: &'a Symbol,
     // int slen;
+    slen: usize,
     // char *filename;
+    filename: &'a usize,
     // uint16_t lineno;
+    line_no: u16,
     // int (*partial_hook)(struct mrb_parser_state*);
+    partial_hook: &'a fn(&'a ParserState) -> usize,
     // void *partial_data;
+    partial_data: &'a u8,
     // struct RClass *target_class;
+    target_class: RClass,
     // mrb_bool capture_errors:1;
     capture_errors: bool,
     // mrb_bool dump_result:1;
