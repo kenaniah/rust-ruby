@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "ruby",
+  "ruby-core",
   "ruby-lexer",
   "ruby-parser"
 ]

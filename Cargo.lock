@@ -334,6 +334,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ruby-core"
+version = "0.1.0"
+
+[[package]]
 name = "ruby-lexer"
 version = "0.1.0"
 dependencies = [
