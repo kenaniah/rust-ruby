@@ -1,4 +1,5 @@
-use crate::{RubyMemoryPool, RubyState};
+use crate::{RubyMemoryPool, RubyState, Symbol};
+
 #[cfg(feature = "stdio")]
 use std::fs::File;
 
@@ -75,4 +76,34 @@ pub struct RubyASTNode<'a> {
     next: &'a Self,
     line_no: u16,
     filename_idx: u16
+}
+
+/**
+Tracks the load context of the parser
+
+Corresponds to mruby's `mrbc_context` struct
+*/
+pub struct CompileContext<'a> {
+    // mrb_sym *syms;
+    symbols: &'a Symbol,
+    // int slen;
+    // char *filename;
+    // uint16_t lineno;
+    // int (*partial_hook)(struct mrb_parser_state*);
+    // void *partial_data;
+    // struct RClass *target_class;
+    // mrb_bool capture_errors:1;
+    capture_errors: bool,
+    // mrb_bool dump_result:1;
+    dump_result: bool,
+    // mrb_bool no_exec:1;
+    no_exec: bool,
+    // mrb_bool keep_lv:1;
+    keep_lv: bool,
+    // mrb_bool no_optimize:1;
+    no_optimize: bool,
+    // mrb_bool on_eval:1;
+    on_eval: bool,
+    // size_t parser_nerr;
+    parser_err_no: usize
 }
