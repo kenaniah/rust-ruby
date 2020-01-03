@@ -4,4 +4,8 @@ version = "0.1.0"
 authors = ["Kenaniah Cerny <kenaniah@gmail.com>"]
 edition = "2018"
 
+[features]
+default = ["stdio"]
+stdio = []
+
 [dependencies]
