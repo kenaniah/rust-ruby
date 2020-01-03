@@ -8,7 +8,7 @@ where
     /// This function is used by the iterator implementation to retrieve the next token.
     ///
     /// Depending on what type of token is returned, the lexing state may be adjusted.
-    pub fn emit_token(&mut self) -> LexResult {
+    pub(crate) fn emit_token(&mut self) -> LexResult {
         let lex_result = self.produce_token();
         if let Ok((_, token, _)) = &lex_result {
             match token {
@@ -29,7 +29,7 @@ where
     }
 
     /// Returns the character at the given index within the lexer's buffer.
-    pub fn char(&self, index: usize) -> Option<char> {
+    pub(crate) fn char(&self, index: usize) -> Option<char> {
         assert!(index < BUFFER_SIZE);
         match self.chr.get(index) {
             Some(c) => *c,
@@ -38,7 +38,7 @@ where
     }
 
     /// Returns the next `n` number of characters as a string (or `None` if EOF encountered).
-    pub fn chars(&self, n: usize) -> Option<String> {
+    pub(crate) fn chars(&self, n: usize) -> Option<String> {
         let mut str = String::with_capacity(n);
         for i in 0..n {
             match self.chr.get(i) {
@@ -50,7 +50,7 @@ where
     }
 
     /// Consumes and returns the next upcoming character, adjusting the lexer's current location.
-    pub fn next_char(&mut self) -> Option<char> {
+    pub(crate) fn next_char(&mut self) -> Option<char> {
         // Shift the stack of upcoming characters
         let c = self.chr.pop_front()?;
         self.chr.push_back(self.input.next());
@@ -65,7 +65,7 @@ where
     }
 
     /// Retrieve's the lexer's current location in the source stream.
-    pub fn get_pos(&self) -> Location {
+    pub(crate) fn get_pos(&self) -> Location {
         self.location.clone()
     }
 
@@ -74,7 +74,7 @@ where
     /// # Panics
     ///  * Panics if the number of characters requested is greater than the buffer's size.
     ///  * Panics if the number of characters requested moves past the end of the buffer's input stream.
-    pub fn emit_from_chars(&mut self, token: Token, chars: usize) -> LexResult {
+    pub(crate) fn emit_from_chars(&mut self, token: Token, chars: usize) -> LexResult {
         let tok_start = self.get_pos();
         match chars {
             1..=BUFFER_SIZE => {

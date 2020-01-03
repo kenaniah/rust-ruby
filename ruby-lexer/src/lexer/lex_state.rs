@@ -28,19 +28,19 @@ impl<T> Lexer<T>
 where
     T: Iterator<Item = char>,
 {
-    pub fn is_arg(&self) -> bool {
+    pub(crate) fn is_arg(&self) -> bool {
         match self.lex_state {
             LexState::EXPR_ARG | LexState::EXPR_CMDARG => true,
             _ => false,
         }
     }
-    pub fn is_end(&self) -> bool {
+    pub(crate) fn is_end(&self) -> bool {
         match self.lex_state {
             LexState::EXPR_END | LexState::EXPR_ENDARG | LexState::EXPR_ENDFN => true,
             _ => false,
         }
     }
-    pub fn is_beg(&self) -> bool {
+    pub(crate) fn is_beg(&self) -> bool {
         match self.lex_state {
             LexState::EXPR_BEG
             | LexState::EXPR_MID
@@ -49,17 +49,17 @@ where
             _ => false,
         }
     }
-    pub fn is_spcarg(&self, c: char) -> bool {
+    pub(crate) fn is_spcarg(&self, c: char) -> bool {
         self.is_arg() && self.seen_whitespace && !Self::is_whitespace(c)
     }
-    pub fn is_label_possible(&self) -> bool {
+    pub(crate) fn is_label_possible(&self) -> bool {
         (self.lex_state == LexState::EXPR_BEG && !self.prev_command_state) || self.is_arg()
     }
-    pub fn is_label_suffix(&self, i: usize) -> bool {
+    pub(crate) fn is_label_suffix(&self, i: usize) -> bool {
         self.char(i) == Some(':') || self.char(i + 1) != Some(':')
     }
     /// Updates the lexer's state after parsing operators and punctuators
-    pub fn set_lexer_newline_state(&mut self) {
+    pub(crate) fn set_lexer_newline_state(&mut self) {
         if self.lex_state == LexState::EXPR_FNAME || self.lex_state == LexState::EXPR_DOT {
             self.lex_state = LexState::EXPR_ARG;
         } else {

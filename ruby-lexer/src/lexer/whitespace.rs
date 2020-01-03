@@ -5,7 +5,7 @@ where
     T: Iterator<Item = char>,
 {
     /// Helper function to determine if a character is whitespace (not including newline)
-    pub fn is_whitespace(c: char) -> bool {
+    pub(crate) fn is_whitespace(c: char) -> bool {
         match c {
             ' ' | '\t' | '\x0b' | '\x0c' | '\r' => true,
             _ => false,
@@ -13,7 +13,7 @@ where
     }
 
     /// Lexes a sequence of whitespace characters and escaped newlines
-    pub fn lex_whitespace(&mut self) -> LexResult {
+    pub(crate) fn lex_whitespace(&mut self) -> LexResult {
         let tok_start = self.get_pos();
         loop {
             if let Some(c) = self.char(0) {

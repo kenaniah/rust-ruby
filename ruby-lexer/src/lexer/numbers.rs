@@ -7,7 +7,7 @@ where
     T: Iterator<Item = char>,
 {
     /// Lexes and returns a numeric token
-    pub fn lex_number(&mut self) -> LexResult {
+    pub(crate) fn lex_number(&mut self) -> LexResult {
 
         // parse.y:5052
         let mut seen_point = false;
@@ -164,7 +164,7 @@ where
     }
 
     /// Wraps char#is_digit
-    pub fn is_digit(c: Option<char>, radix: u32) -> bool {
+    pub(crate) fn is_digit(c: Option<char>, radix: u32) -> bool {
         if let Some(c) = c {
             return c.is_digit(radix);
         }

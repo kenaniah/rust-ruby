@@ -18,12 +18,12 @@ where
     /// Checks if the given character is a valid Ruby identifier character
     ///
     /// Identifying characters include `[a-zA-Z0-9_]` and non-ascii characters
-    pub fn is_identchar(c: char) -> bool {
+    pub(crate) fn is_identchar(c: char) -> bool {
         c.is_ascii_alphanumeric() || c == '_' || !c.is_ascii()
     }
 
     /// Lexes and returns an identifier or a language keyword
-    pub fn lex_identifier(&mut self, prefix: String) -> LexResult {
+    pub(crate) fn lex_identifier(&mut self, prefix: String) -> LexResult {
         // Check for the program end token followed by a newline or EOF
         let start_pos = self.get_pos();
         if prefix == "" && start_pos.col() == 1 && self.chars(7) == Some("__END__".to_owned()) {
