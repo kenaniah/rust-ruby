@@ -1,6 +1,4 @@
-/***
-Ruby Core
-*/
+//! Ruby Core
 
 use std::collections::HashMap;
 
