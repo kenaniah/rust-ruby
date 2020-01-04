@@ -3,9 +3,7 @@ use crate::{RClass, RubyMemoryPool, RubyState, Symbol};
 #[cfg(feature = "stdio")]
 use std::fs::File;
 
-/**
-Implementation of `mrb_parser_state`
-*/
+/// Implementation of `mrb_parser_state`
 pub struct ParserState<'a> {
     /// Ruby's current state (`mrb_state *mrb`)
     pub(crate) ruby_state: &'a RubyState,
@@ -66,11 +64,9 @@ pub struct ParserState<'a> {
 
 }
 
-/**
-Used to track file / line information for AST nodes
-
-Corresponds to mruby's `mrb_ast_node` struct
-*/
+/// Used to track file / line information for AST nodes
+///
+/// Corresponds to mruby's `mrb_ast_node` struct
 pub struct RubyASTNode<'a> {
     prev: &'a Self,
     next: &'a Self,
@@ -78,11 +74,9 @@ pub struct RubyASTNode<'a> {
     filename_idx: u16
 }
 
-/**
-Tracks the load context of the parser
-
-Corresponds to mruby's `mrbc_context` struct
-*/
+/// Tracks the load context of the parser
+///
+/// Corresponds to mruby's `mrbc_context` struct
 pub struct CompileContext<'a> {
     // mrb_sym *syms;
     symbols: &'a Symbol,

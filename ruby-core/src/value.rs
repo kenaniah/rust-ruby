@@ -1,8 +1,6 @@
-/**
-Represents the type of a Ruby `Value`
-
-Corresponds to mruby's `mrb_vtype` enum
-**/
+/// Represents the type of a Ruby `Value`
+///
+/// Corresponds to mruby's `mrb_vtype` enum
 pub enum ValueType {
     FALSE = 0, /*   0 */
     TRUE,      /*   1 */
@@ -31,11 +29,9 @@ pub enum ValueType {
     BREAK,     /*  24 */
 }
 
-/**
-Represents a Ruby `Value`
-
-Corresponds to mruby's `mrb_value` struct
-*/
+/// Represents a Ruby `Value`
+///
+/// Corresponds to mruby's `mrb_value` struct
 pub struct Value {
 
 }

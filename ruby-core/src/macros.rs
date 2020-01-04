@@ -1,6 +1,4 @@
-/**
-Used to define the Ruby object structs
-*/
+/// Used to define the Ruby object structs
 #[macro_export]
 macro_rules! define_object_struct {
     ($(#[$outer:meta])* $struct:ident {$( $field:ident:$type:ty ),*}) => {
