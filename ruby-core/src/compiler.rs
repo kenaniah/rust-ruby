@@ -97,7 +97,7 @@ pub struct CompileContext<'a> {
     // void *partial_data;
     partial_data: &'a u8,
     // struct RClass *target_class;
-    target_class: RClass,
+    target_class: &'a RClass<'a>,
     // mrb_bool capture_errors:1;
     capture_errors: bool,
     // mrb_bool dump_result:1;

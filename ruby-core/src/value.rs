@@ -30,3 +30,12 @@ pub enum ValueType {
     ISTRUCT,   /*  23 */
     BREAK,     /*  24 */
 }
+
+/**
+Represents a Ruby `Value`
+
+Corresponds to mruby's `mrb_value` struct
+*/
+pub struct Value {
+
+}
