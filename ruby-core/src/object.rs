@@ -1,4 +1,4 @@
-use crate::RClass;
+use crate::{RClass, ValueType};
 
 pub trait Freezable {
     const OBJ_IS_FROZEN: u32 = 1 << 20;
@@ -13,7 +13,7 @@ macro_rules! object_struct {
         pub struct $struct<'a> {
             c: RClass,
             gc_next: &'a RBasic<'a>,
-            //enum mrb_vtype tt:8;
+            tt: ValueType,
             color: u32,
             flags: u32,
             $(
