@@ -1,5 +1,4 @@
-use crate::{Symbol, Value};
-use std::collections::HashMap;
+use crate::VariableTable;
 
 pub(crate) trait Freezable {
     const OBJ_IS_FROZEN: u32 = 1 << 20;
@@ -14,7 +13,7 @@ define_object_struct! {
 
 define_object_struct! {
     RObject {
-        instance_variables: &'a HashMap<Symbol, Value>
+        instance_variables: &'a VariableTable
     }
 }
 

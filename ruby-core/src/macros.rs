@@ -12,7 +12,7 @@ macro_rules! define_object_struct {
             color: u32,
             flags: u32,
             $(
-                $field: $type
+                $field: $type,
             )*
         }
         impl crate::object::Freezable for $struct<'_> {

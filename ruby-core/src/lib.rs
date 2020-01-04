@@ -2,6 +2,8 @@
 Ruby Core
 */
 
+use std::collections::HashMap;
+
 #[macro_use]
 mod macros;
 
@@ -23,3 +25,10 @@ pub use value::{Value, ValueType};
 Represents a Ruby `Symbol`
 */
 pub type Symbol = u32;
+
+/**
+Represents a table of variables
+
+Corresponds to mruby's `iv_table` struct
+*/
+pub type VariableTable = HashMap<Symbol, Value>;
