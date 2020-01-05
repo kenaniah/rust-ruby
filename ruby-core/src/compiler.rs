@@ -1,17 +1,17 @@
-use crate::{RClass, RubyMemoryPool, RubyState, Symbol};
+use crate::{MemoryPool, RClass, Ruby, Symbol};
 
 #[cfg(feature = "stdio")]
 use std::fs::File;
 
 /// Represents the state of the Ruby parser
 #[maps_to(mruby: mrb_parser_state)]
-pub struct RubyParserState<'a> {
+pub struct ParserState<'a> {
     /// Ruby's current state (`mrb_state *mrb`)
-    pub(crate) ruby_state: &'a RubyState,
+    pub(crate) rb: &'a Ruby,
     /// Ruby's memory pool (`struct mrb_pool *pool`)
-    pub(crate) ruby_pool: &'a RubyMemoryPool<'a>,
+    pub(crate) ruby_pool: &'a MemoryPool<'a>,
     /// (`mrb_ast_node *cells`)
-    pub(crate) cells: &'a RubyASTNode<'a>,
+    pub(crate) cells: &'a ASTNode<'a>,
     // const char *s, *send;
     pub(crate) s: u8,
     pub(crate) send: u8,
@@ -66,7 +66,7 @@ pub struct RubyParserState<'a> {
 
 /// Used to track file / line information for AST nodes
 #[maps_to(mruby: mrb_ast_node)]
-pub struct RubyASTNode<'a> {
+pub struct ASTNode<'a> {
     prev: &'a Self,
     next: &'a Self,
     line_no: u16,
@@ -75,7 +75,7 @@ pub struct RubyASTNode<'a> {
 
 /// Tracks the load context of the parser
 #[maps_to(mruby: mrbc_context)]
-pub struct RubyCompileContext<'a> {
+pub struct CompileContext<'a> {
     // mrb_sym *syms;
     symbols: &'a Symbol,
     // int slen;
@@ -85,7 +85,7 @@ pub struct RubyCompileContext<'a> {
     // uint16_t lineno;
     line_no: u16,
     // int (*partial_hook)(struct mrb_parser_state*);
-    partial_hook: &'a fn(&'a RubyParserState) -> usize,
+    partial_hook: &'a fn(&'a ParserState) -> usize,
     // void *partial_data;
     partial_data: &'a u8,
     // struct RClass *target_class;
@@ -104,4 +104,53 @@ pub struct RubyCompileContext<'a> {
     on_eval: bool,
     // size_t parser_nerr;
     parser_err_no: usize,
+}
+
+#[allow(non_camel_case_types)]
+#[maps_to(mruby: mrb_lex_state_enum)]
+pub enum LexState {
+    EXPR_BEG,    /* ignore newline, +/- is a sign. */
+    EXPR_END,    /* newline significant, +/- is an operator. */
+    EXPR_ENDARG, /* ditto, and unbound braces. */
+    EXPR_ENDFN,  /* ditto, and unbound braces. */
+    EXPR_ARG,    /* newline significant, +/- is an operator. */
+    EXPR_CMDARG, /* newline significant, +/- is an operator. */
+    EXPR_MID,    /* newline significant, +/- is an operator. */
+    EXPR_FNAME,  /* ignore newline, no reserved words. */
+    EXPR_DOT,    /* right after '.' or '::', no reserved words. */
+    EXPR_CLASS,  /* immediate after 'class', no here document. */
+    EXPR_VALUE,  /* alike EXPR_BEG but label is disallowed. */
+}
+
+#[maps_to(mruby: mrb_parser_message)]
+pub struct ParserMessage {
+    line_no: u16,
+    column: usize,
+    message: String,
+}
+
+#[allow(non_camel_case_types)]
+pub mod flags {
+    pub const STR_PARSING: isize = 0x01;
+    pub const STR_EXPAND: isize = 0x02;
+    pub const STR_REGEXP: isize = 0x04;
+    pub const STR_WORD: isize = 0x08;
+    pub const STR_SYMBOL: isize = 0x10;
+    pub const STR_ARRAY: isize = 0x20;
+    pub const STR_HEREDOC: isize = 0x40;
+    pub const STR_XQUOTE: isize = 0x80;
+}
+
+pub enum StringType {
+    NotParsing = 0,
+    SQuote = flags::STR_PARSING,
+    DQuote = (flags::STR_PARSING | flags::STR_EXPAND),
+    Regexp = (flags::STR_PARSING | flags::STR_REGEXP | flags::STR_EXPAND),
+    SWord = (flags::STR_PARSING | flags::STR_WORD | flags::STR_ARRAY),
+    DWord = (flags::STR_PARSING | flags::STR_WORD | flags::STR_ARRAY | flags::STR_EXPAND),
+    SSym = (flags::STR_PARSING | flags::STR_SYMBOL),
+    SSymbols = (flags::STR_PARSING | flags::STR_SYMBOL | flags::STR_ARRAY),
+    DSymbols = (flags::STR_PARSING | flags::STR_SYMBOL | flags::STR_ARRAY | flags::STR_EXPAND),
+    Heredoc = (flags::STR_PARSING | flags::STR_HEREDOC),
+    XQuote = (flags::STR_PARSING | flags::STR_XQUOTE | flags::STR_EXPAND),
 }

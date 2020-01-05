@@ -8,18 +8,20 @@ extern crate ruby_proc_macros;
 #[macro_use]
 mod macros;
 
+mod array;
 mod class;
 mod compiler;
 mod object;
-mod ruby_memory_pool;
-mod ruby_state;
+mod memory_pool;
+mod ruby;
 mod value;
 
+pub use array::{RArray, SharedArray};
 pub use class::RClass;
-pub use compiler::{RubyASTNode, RubyCompileContext, RubyParserState};
+pub use compiler::{ASTNode, CompileContext, LexState, ParserMessage, ParserState, StringType};
 pub use object::{RBasic, RFiber, RObject};
-pub use ruby_memory_pool::RubyMemoryPool;
-pub use ruby_state::RubyState;
+pub use memory_pool::MemoryPool;
+pub use ruby::Ruby;
 pub use value::{Value, ValueType};
 
 /// Represents a Ruby `Symbol`
@@ -32,6 +34,6 @@ pub type VariableTable = HashMap<Symbol, Value>;
 
 /// The function pointer type for functions that are callable in Ruby
 ///
-/// The arguments to the function are stored on the `RubyState` struct and can be retrieved via `ruby_state.get_args()`
+/// The arguments to the function are stored on the `State` struct and can be retrieved via `ruby_state.get_args()`
 #[maps_to(mruby: mrb_func_t)]
-pub type RubyFunction = fn(ruby_state: &RubyState, sender: Value) -> Value;
+pub type RubyFunction = fn(rb: &Ruby, sender: Value) -> Value;
