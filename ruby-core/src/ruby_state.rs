@@ -1,6 +1,5 @@
 /// Represents the current state of the Ruby interpreter
-///
-/// Corresponds to mruby's `mrb_state` struct.
+#[maps_to(mruby: mrb_state)]
 pub struct RubyState {
     // not yet implemented
 }

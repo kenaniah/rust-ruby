@@ -9,3 +9,4 @@ default = ["stdio"]
 stdio = []
 
 [dependencies]
+ruby-proc-macros = { path = "../ruby-proc-macros" }

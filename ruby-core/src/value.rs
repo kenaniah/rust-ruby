@@ -1,6 +1,5 @@
 /// Represents the type of a Ruby `Value`
-///
-/// Corresponds to mruby's `mrb_vtype` enum
+#[maps_to(mruby: mrb_vtype)]
 pub enum ValueType {
     FALSE = 0, /*   0 */
     TRUE,      /*   1 */
@@ -30,8 +29,7 @@ pub enum ValueType {
 }
 
 /// Represents a Ruby `Value`
-///
-/// Corresponds to mruby's `mrb_value` struct
+#[maps_to(mruby: mrb_value)]
 pub struct Value {
 
 }

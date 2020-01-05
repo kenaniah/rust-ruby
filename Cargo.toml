@@ -3,5 +3,6 @@ members = [
   "ruby",
   "ruby-core",
   "ruby-lexer",
-  "ruby-parser"
+  "ruby-parser",
+  "ruby-proc-macros"
 ]

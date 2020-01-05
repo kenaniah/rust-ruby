@@ -8,16 +8,19 @@ pub(crate) trait Freezable {
 }
 
 define_object_struct! {
+    #[maps_to(mruby: RBasic)]
     RBasic {}
 }
 
 define_object_struct! {
+    #[maps_to(mruby: RObject)]
     RObject {
         instance_variables: &'a VariableTable
     }
 }
 
 define_object_struct! {
+    #[maps_to(mruby: RFiber)]
     RFiber {
         //struct mrb_context *cxt;
     }

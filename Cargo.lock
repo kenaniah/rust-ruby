@@ -336,6 +336,9 @@ dependencies = [
 [[package]]
 name = "ruby-core"
 version = "0.1.0"
+dependencies = [
+ "ruby-proc-macros 0.1.0",
+]
 
 [[package]]
 name = "ruby-lexer"
@@ -355,6 +358,10 @@ dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "ruby-proc-macros"
+version = "0.1.0"
 
 [[package]]
 name = "rust-argon2"

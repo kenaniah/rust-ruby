@@ -3,8 +3,9 @@ use crate::{RClass, RubyMemoryPool, RubyState, Symbol};
 #[cfg(feature = "stdio")]
 use std::fs::File;
 
-/// Implementation of `mrb_parser_state`
-pub struct ParserState<'a> {
+/// Represents the state of the Ruby parser
+#[maps_to(mruby: mrb_parser_state)]
+pub struct RubyParserState<'a> {
     /// Ruby's current state (`mrb_state *mrb`)
     pub(crate) ruby_state: &'a RubyState,
     /// Ruby's memory pool (`struct mrb_pool *pool`)
@@ -61,23 +62,20 @@ pub struct ParserState<'a> {
     // uint16_t current_filename_index;
     //
     // struct mrb_jmpbuf* jmp;
-
 }
 
 /// Used to track file / line information for AST nodes
-///
-/// Corresponds to mruby's `mrb_ast_node` struct
+#[maps_to(mruby: mrb_ast_node)]
 pub struct RubyASTNode<'a> {
     prev: &'a Self,
     next: &'a Self,
     line_no: u16,
-    filename_idx: u16
+    filename_idx: u16,
 }
 
 /// Tracks the load context of the parser
-///
-/// Corresponds to mruby's `mrbc_context` struct
-pub struct CompileContext<'a> {
+#[maps_to(mruby: mrbc_context)]
+pub struct RubyCompileContext<'a> {
     // mrb_sym *syms;
     symbols: &'a Symbol,
     // int slen;
@@ -87,7 +85,7 @@ pub struct CompileContext<'a> {
     // uint16_t lineno;
     line_no: u16,
     // int (*partial_hook)(struct mrb_parser_state*);
-    partial_hook: &'a fn(&'a ParserState) -> usize,
+    partial_hook: &'a fn(&'a RubyParserState) -> usize,
     // void *partial_data;
     partial_data: &'a u8,
     // struct RClass *target_class;
@@ -105,5 +103,5 @@ pub struct CompileContext<'a> {
     // mrb_bool on_eval:1;
     on_eval: bool,
     // size_t parser_nerr;
-    parser_err_no: usize
+    parser_err_no: usize,
 }
