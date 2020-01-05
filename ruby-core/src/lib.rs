@@ -32,7 +32,7 @@ pub type Symbol = u32;
 #[maps_to(mruby: iv_table)]
 pub type VariableTable = HashMap<Symbol, Value>;
 
-/// The function pointer type for functions that are callable in Ruby
+/// Function pointer type for functions that are callable in Ruby
 ///
 /// The arguments to the function are stored on the `State` struct and can be retrieved via `ruby_state.get_args()`
 #[maps_to(mruby: mrb_func_t)]

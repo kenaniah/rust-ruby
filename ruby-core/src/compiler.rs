@@ -7,45 +7,68 @@ use std::fs::File;
 #[maps_to(mruby: mrb_parser_state)]
 pub struct ParserState<'a> {
     /// Ruby's current state (`mrb_state *mrb`)
-    pub(crate) rb: &'a Ruby,
+    rb: &'a Ruby,
     /// Ruby's memory pool (`struct mrb_pool *pool`)
-    pub(crate) ruby_pool: &'a MemoryPool<'a>,
+    ruby_pool: &'a MemoryPool<'a>,
     /// (`mrb_ast_node *cells`)
-    pub(crate) cells: &'a ASTNode<'a>,
+    cells: &'a ASTNode<'a>,
     // const char *s, *send;
-    pub(crate) s: u8,
-    pub(crate) send: u8,
+    s: u8,
+    send: u8,
     // FILE *f;
     #[cfg(feature = "stdio")]
-    pub(crate) file: &'a File,
-    // mrbc_context *cxt;
-    // mrb_sym filename_sym;
-    // uint16_t lineno;
-    // int column;
-    //
-    // enum mrb_lex_state_enum lstate;
-    // mrb_ast_node *lex_strterm; /* (type nest_level beg . end) */
-    //
-    // unsigned int cond_stack;
-    // unsigned int cmdarg_stack;
-    // int paren_nest;
-    // int lpar_beg;
-    // int in_def, in_single;
-    // mrb_bool cmd_start:1;
-    // mrb_ast_node *locals;
-    //
-    // mrb_ast_node *pb;
-    // char *tokbuf;
-    // char buf[MRB_PARSER_TOKBUF_SIZE];
-    // int tidx;
-    // int tsiz;
-    //
-    // mrb_ast_node *all_heredocs; /* list of mrb_parser_heredoc_info* */
+    file: &'a File,
+    /// mrbc_context *cxt;
+    context: &'a CompileContext<'a>,
+    /// mrb_sym filename_sym;
+    filename_sym: Symbol,
+    /// uint16_t lineno;
+    line_no: u16,
+    /// int column;
+    column: usize,
+    /// enum mrb_lex_state_enum lstate;
+    lex_state: LexState,
+    /// mrb_ast_node *lex_strterm; /* (type nest_level beg . end) */
+    lex_strterm: &'a ASTNode<'a>,
+    /// unsigned int cond_stack;
+    cond_stack: usize,
+    /// unsigned int cmdarg_stack;
+    cmdarg_stack: usize,
+    /// int paren_nest;
+    paren_nest: isize,
+    /// int lpar_beg;
+    lpar_beg: isize,
+    /// int in_def;
+    in_def: isize,
+    /// int in_single;
+    in_single: isize,
+    /// mrb_bool cmd_start:1;
+    cmd_start: bool,
+    /// mrb_ast_node *locals;
+    locals: &'a ASTNode<'a>,
+    /// mrb_ast_node *pb;
+    pb: &'a ASTNode<'a>,
+    /// char *tokbuf;
+    tokbuf: &'a str,
+    /// char buf[MRB_PARSER_TOKBUF_SIZE];
+    buf: &'a str,
+    /// int tidx;
+    tidx: usize,
+    /// int tsiz;
+    tsiz: usize,
+
+    /// mrb_ast_node *all_heredocs; /* list of mrb_parser_heredoc_info* */
+    all_heredocs: &'a ASTNode<'a>,
     // mrb_ast_node *heredocs_from_nextline;
+    heredocs_from_nextline: &'a ASTNode<'a>,
     // mrb_ast_node *parsing_heredoc;
+    parsing_heredoc: &'a ASTNode<'a>,
     // mrb_ast_node *lex_strterm_before_heredoc;
-    //
-    // void *ylval;
+    lex_strterm_before_heredoc: &'a ASTNode<'a>,
+
+    /// void *ylval;
+    ylval: (),
+
     //
     // size_t nerr;
     // size_t nwarn;
@@ -108,6 +131,7 @@ pub struct CompileContext<'a> {
 
 #[allow(non_camel_case_types)]
 #[maps_to(mruby: mrb_lex_state_enum)]
+/// Represents the current lexing state of the Ruby parser
 pub enum LexState {
     EXPR_BEG,    /* ignore newline, +/- is a sign. */
     EXPR_END,    /* newline significant, +/- is an operator. */
@@ -129,6 +153,15 @@ pub struct ParserMessage {
     message: String,
 }
 
+#[maps_to(mruby: mrb_parser_heredoc_info)]
+pub struct ParserHeredocInfo<'a> {
+    allow_indent: bool,
+    line_head: bool,
+    string_type: StringType,
+    term: &'a str,
+    doc: ASTNode<'a>,
+}
+
 #[allow(non_camel_case_types)]
 pub mod flags {
     pub const STR_PARSING: isize = 0x01;
@@ -141,6 +174,8 @@ pub mod flags {
     pub const STR_XQUOTE: isize = 0x80;
 }
 
+#[maps_to(mruby: mrb_string_type)]
+/// Represents Ruby's various string types
 pub enum StringType {
     NotParsing = 0,
     SQuote = flags::STR_PARSING,
