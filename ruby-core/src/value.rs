@@ -1,3 +1,5 @@
+//! This module pulls from mruby/include/mruby/boxing_*.h
+
 /// Represents the type of a Ruby `Value`
 #[maps_to(mruby: mrb_vtype)]
 pub enum ValueType {

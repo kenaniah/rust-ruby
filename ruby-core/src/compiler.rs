@@ -1,4 +1,4 @@
-use crate::{MemoryPool, RClass, Ruby, Symbol};
+use crate::{JumpBuffer, MemoryPool, RClass, Ruby, Symbol};
 
 #[cfg(feature = "stdio")]
 use std::fs::File;
@@ -51,7 +51,7 @@ pub struct ParserState<'a> {
     /// char *tokbuf;
     tokbuf: &'a str,
     /// char buf[MRB_PARSER_TOKBUF_SIZE];
-    buf: &'a str,
+    buf: [char; 256],
     /// int tidx;
     tidx: usize,
     /// int tsiz;
@@ -69,22 +69,30 @@ pub struct ParserState<'a> {
     /// void *ylval;
     ylval: (),
 
-    //
     // size_t nerr;
+    nerr: isize,
     // size_t nwarn;
+    nwarn: isize,
     // mrb_ast_node *tree;
-    //
+    tree: &'a ASTNode<'a>,
+
     // mrb_bool no_optimize:1;
+    no_optimize: bool,
     // mrb_bool on_eval:1;
+    on_eval: bool,
     // mrb_bool capture_errors:1;
+    capture_errors: bool,
     // struct mrb_parser_message error_buffer[10];
+    error_buffer: [ParserMessage; 10],
     // struct mrb_parser_message warn_buffer[10];
-    //
-    // mrb_sym* filename_table;
-    // uint16_t filename_table_length;
-    // uint16_t current_filename_index;
-    //
+    warn_buffer: [ParserMessage; 10],
+
+    // mrb_sym* filename_table; uint16_t filename_table_length;
+    filename_table: Vec<Symbol>,
+    current_filename_index: isize,
+
     // struct mrb_jmpbuf* jmp;
+    jmp: &'a JumpBuffer,
 }
 
 /// Used to track file / line information for AST nodes
