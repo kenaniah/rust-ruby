@@ -18,8 +18,10 @@ mod object;
 mod proc;
 mod range;
 mod ruby;
+mod string;
 mod throw;
 mod value;
+mod variable;
 
 pub use array::{RArray, SharedArray};
 pub use class::RClass;
@@ -31,8 +33,10 @@ pub use object::{RBasic, RFiber, RObject};
 pub use proc::{REnv, RProc};
 pub use range::RRange;
 pub use ruby::Ruby;
+pub use string::{RString, RStringEmbed};
 pub use throw::JumpBuffer;
 pub use value::{Value, ValueType};
+pub use variable::{GlobalEntry, GlobalVariable};
 
 /// Represents a Ruby `Symbol`
 #[maps_to(mruby: mrb_sym)]
